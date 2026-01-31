@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.6.42">
+<meta name="generator" content="quarto-1.4.551">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -35,7 +35,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -65,13 +65,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="tp4_MARIAC_DUIGOU_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="tp4_MARIAC_DUIGOU_files/libs/quarto-html/anchor.min.js"></script>
 <link href="tp4_MARIAC_DUIGOU_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="tp4_MARIAC_DUIGOU_files/libs/quarto-html/quarto-syntax-highlighting-de84f8d6bb715db06a919283c2d1e787.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="tp4_MARIAC_DUIGOU_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap-ccd2b7ae8bd2febf6a9ff15c1742a5e1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 <style>html{ scroll-behavior: smooth; }</style>
 <link href="tp4_MARIAC_DUIGOU_files/libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+
 <script src="tp4_MARIAC_DUIGOU_files/libs/pagedtable-1.1/js/pagedtable.js"></script>
+
 
 
 </head>
@@ -85,6 +87,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#contexte" id="toc-contexte" class="nav-link active" data-scroll-target="#contexte"><span class="header-section-number">1</span> Contexte</a></li>
+  <li><a href="#nettoyage-des-données" id="toc-nettoyage-des-données" class="nav-link" data-scroll-target="#nettoyage-des-données"><span class="header-section-number">2</span> Nettoyage des données</a>
+  <ul class="collapse">
+  <li><a href="#première-approche-agrégation-simple" id="toc-première-approche-agrégation-simple" class="nav-link" data-scroll-target="#première-approche-agrégation-simple"><span class="header-section-number">2.1</span> Première approche : agrégation simple</a></li>
+  <li><a href="#deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" id="toc-deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" class="nav-link" data-scroll-target="#deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur"><span class="header-section-number">2.2</span> Deuxième approche : Agrégation en fonction du palier de profondeur</a></li>
+  </ul></li>
+  <li><a href="#traitement-des-outliers-et-des-données-manquantes" id="toc-traitement-des-outliers-et-des-données-manquantes" class="nav-link" data-scroll-target="#traitement-des-outliers-et-des-données-manquantes"><span class="header-section-number">3</span> Traitement des outliers et des données manquantes</a>
+  <ul class="collapse">
+  <li><a href="#estimation-de-la-densité-par-mélange-gaussien" id="toc-estimation-de-la-densité-par-mélange-gaussien" class="nav-link" data-scroll-target="#estimation-de-la-densité-par-mélange-gaussien"><span class="header-section-number">3.1</span> Estimation de la densité par mélange gaussien</a></li>
+  </ul></li>
   </ul>
 </nav>
 </div>
@@ -124,7 +135,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="contexte" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Contexte</h1>
 <p>Il s’agit d’un autre jeu de données de lac (un différent). Cette fois ci il y a des mesures de température de l’eau, de saturation en oxygène et de chlorophylle totale. La température est mesurée à différents paliers de profondeur (palier 1 = surface, palier 5 = fond). Les données couvrent la période de 2020 à mi 2022. Il y a des trous dans les données, mais globalement la fréquence d’échantillonnage est bonne. Votre tache sera de - faire une analyse rapide de ces données - Réduire le jeu de données à une fréquence de 1h15 - compléter les trous par interpolation raisonnable (pas “trop grand trou”) - traiter les outliers éventuels - produire des visualisations claires et pertinentes</p>
-<p>#&nbsp;Nettoyage des données</p>
+</section>
+<section id="nettoyage-des-données" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Nettoyage des données</h1>
+<section id="première-approche-agrégation-simple" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="première-approche-agrégation-simple"><span class="header-section-number">2.1</span> Première approche : agrégation simple</h2>
 <p>Les données ne sont pas bien espacées dans le temps. Il y’a des données toutes les 20/30 secondes en moyenne mais aussi des trous de plusieurs heures.</p>
 <div class="cell">
 <details class="code-fold">
@@ -274,7 +289,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>[1] 6120</code></pre>
 </div>
 </div>
-<p>On plotte les données nettoyées pour Twater.</p>
+<p>On plot les données nettoyées pour Twater.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
@@ -289,6 +304,117 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+</section>
+<section id="deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur"><span class="header-section-number">2.2</span> Deuxième approche : Agrégation en fonction du palier de profondeur</h2>
+<p>Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.</p>
+</section>
+</section>
+<section id="traitement-des-outliers-et-des-données-manquantes" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Traitement des outliers et des données manquantes</h1>
+<section id="estimation-de-la-densité-par-mélange-gaussien" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="estimation-de-la-densité-par-mélange-gaussien"><span class="header-section-number">3.1</span> Estimation de la densité par mélange gaussien</h2>
+<p>Algorithme EM</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>EM<span class="ot">=</span><span class="cf">function</span>(data, <span class="at">K=</span><span class="dv">3</span>, <span class="at">max_iter=</span><span class="dv">100</span>, <span class="at">tol=</span><span class="fl">1e-6</span>){</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  ts<span class="ot">=</span>data[<span class="sc">!</span><span class="fu">is.na</span>(data)]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  n<span class="ot">=</span><span class="fu">length</span>(ts)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  mu_k<span class="ot">=</span><span class="fu">as.numeric</span>(<span class="fu">quantile</span>(ts,<span class="at">probs=</span><span class="fu">seq</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>, <span class="at">length.out=</span>K)))</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  sigma_k<span class="ot">=</span><span class="fu">rep</span>(<span class="fu">sd</span>(ts), K)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  eps_k<span class="ot">=</span><span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span>K, K)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  loglik_old<span class="ot">=</span><span class="sc">-</span><span class="cn">Inf</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (iter <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_iter){</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape E</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    dens<span class="ot">=</span><span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span>K, <span class="cf">function</span>(k)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      eps_k[k]<span class="sc">*</span><span class="fu">dnorm</span>(ts, mu_k[k], sigma_k[k])</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    dens_sum<span class="ot">=</span><span class="fu">rowSums</span>(dens)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    dens_sum[dens_sum<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    gamma<span class="ot">=</span>dens<span class="sc">/</span>dens_sum</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape M</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    N_k<span class="ot">=</span><span class="fu">colSums</span>(gamma)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    eps_k<span class="ot">=</span>N_k<span class="sc">/</span>n</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    mu_k<span class="ot">=</span><span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">matrix</span>(ts,n,K))<span class="sc">/</span>N_k</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    sigma_k<span class="ot">=</span><span class="fu">sqrt</span>(<span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">sweep</span>(<span class="fu">matrix</span>(ts,n,K), <span class="dv">2</span>, mu_k, <span class="at">FUN=</span><span class="st">"-"</span>)<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span>N_k)</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    sigma_k[sigma_k<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    loglik<span class="ot">=</span><span class="fu">sum</span>(<span class="fu">log</span>(dens_sum))</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">abs</span>(loglik <span class="sc">-</span> loglik_old)<span class="sc">&lt;</span>tol) <span class="cf">break</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    loglik_old<span class="ot">=</span>loglik</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">eps=</span>eps_k, <span class="at">mu=</span>mu_k, <span class="at">sigma=</span>sigma_k, <span class="at">loglik=</span>loglik)</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Estimation des paramètres pour chaque variable</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>parametres<span class="ot">=</span><span class="fu">list</span>(<span class="fu">EM</span>(df75<span class="sc">$</span>Twater),<span class="fu">EM</span>(df75<span class="sc">$</span>O2sat),<span class="fu">EM</span>(df75<span class="sc">$</span>Chltot))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Estimation de la densité pour chaque variable</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dens<span class="ot">=</span><span class="cf">function</span>(x,param){</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span><span class="fu">c</span>()</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    s<span class="ot">=</span><span class="fu">c</span>()</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>){</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      s<span class="ot">=</span><span class="fu">c</span>(s,param<span class="sc">$</span>eps[j]<span class="sc">*</span><span class="fu">dnorm</span>(x[i],param<span class="sc">$</span>mu[j],param<span class="sc">$</span>sigma[j]))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    d<span class="ot">=</span><span class="fu">c</span>(d,<span class="fu">sum</span>(s))</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(d)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>d<span class="ot">=</span><span class="fu">list</span>(<span class="fu">dens</span>(df75<span class="sc">$</span>Twater,parametres[[<span class="dv">1</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>O2sat,parametres[[<span class="dv">2</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>Chltot,parametres[[<span class="dv">3</span>]]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Attribution des NA pour des densité faibles</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>clean<span class="ot">=</span><span class="cf">function</span>(x,density,<span class="at">seuil=</span><span class="fl">0.01</span>){</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span>density</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  clean<span class="ot">=</span><span class="fu">rep</span>(<span class="cn">NA</span>,l)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (d[i]<span class="sc">&gt;=</span> seuil){</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>      clean[i]<span class="ot">=</span>x[i]</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(clean)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>test<span class="ot">=</span><span class="fu">clean</span>(<span class="at">x=</span>df75<span class="sc">$</span>Twater,<span class="at">density=</span>d[[<span class="dv">1</span>]])</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(df<span class="sc">$</span>DATE, df<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">'o'</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(df75<span class="sc">$</span>DATE, test, <span class="at">type=</span><span class="st">'o'</span>,<span class="at">col=</span><span class="st">'red'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
 </section>
 
 </main>
@@ -328,7 +454,18 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const onCopySuccess = function(e) {
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -360,27 +497,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
-  }
-  const getTextToCopy = function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-  }
-  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-    text: getTextToCopy
   });
-  clipboard.on('success', onCopySuccess);
-  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-      text: getTextToCopy,
-      container: window.document.getElementById('quarto-embedded-source-code-modal')
-    });
-    clipboardModal.on('success', onCopySuccess);
-  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp('/' + window.location.host + '/');
@@ -388,7 +505,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
@@ -485,6 +602,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
+      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {

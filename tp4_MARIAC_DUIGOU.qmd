@@ -164,7 +164,7 @@ head(df75)
 nrow(df75)
 ```
 
-On plotte les données nettoyées pour Twater.
+On plot les données nettoyées pour Twater.
 
 ```{r}
 plot(df$DATE, df$Twater, type="l")
@@ -180,3 +180,97 @@ Il est possible que certaines variables varie en fonction de la profondeur. Nous
 
 
 ```
+
+# Traitement des outliers et des données manquantes
+
+## Estimation de la densité par mélange gaussien 
+
+Algorithme EM
+```{r}
+EM=function(data, K=3, max_iter=100, tol=1e-6){
+  ts=data[!is.na(data)]
+  n=length(ts)
+
+  mu_k=as.numeric(quantile(ts,probs=seq(0.25, 0.75, length.out=K)))
+  sigma_k=rep(sd(ts), K)
+  eps_k=rep(1/K, K)
+
+  loglik_old=-Inf
+
+  for (iter in 1:max_iter){
+
+    # Etape E
+    dens=sapply(1:K, function(k)
+      eps_k[k]*dnorm(ts, mu_k[k], sigma_k[k])
+    )
+
+    dens_sum=rowSums(dens)
+    dens_sum[dens_sum<tol]=tol
+
+    gamma=dens/dens_sum
+
+    # Etape M
+    N_k=colSums(gamma)
+
+    eps_k=N_k/n
+    mu_k=colSums(gamma*matrix(ts,n,K))/N_k
+    sigma_k=sqrt(colSums(gamma*sweep(matrix(ts,n,K), 2, mu_k, FUN="-")^2)/N_k)
+
+    sigma_k[sigma_k<tol]=tol
+
+    loglik=sum(log(dens_sum))
+
+    if (abs(loglik - loglik_old)<tol) break
+    loglik_old=loglik
+  }
+
+  list(eps=eps_k, mu=mu_k, sigma=sigma_k, loglik=loglik)
+}
+```
+
+Estimation des paramètres pour chaque variable 
+```{r}
+parametres=list(EM(df75$Twater),EM(df75$O2sat),EM(df75$Chltot))
+```
+
+Estimation de la densité pour chaque variable 
+```{r}
+dens=function(x,param){
+  d=c()
+  l=length(x)
+  for (i in 1:l){
+    s=c()
+    for (j in 1:3){
+      s=c(s,param$eps[j]*dnorm(x[i],param$mu[j],param$sigma[j]))
+    }
+    d=c(d,sum(s))
+  }
+  return(d)
+}
+
+d=list(dens(df75$Twater,parametres[[1]]),dens(df75$O2sat,parametres[[2]]),dens(df75$Chltot,parametres[[3]]))
+```
+
+Attribution des NA pour des densité faibles 
+```{r}
+clean=function(x,density,seuil=0.01){
+  d=density
+  l=length(x)
+  clean=rep(NA,l)
+  for (i in 1:l){
+    if (d[i]>= seuil){
+      clean[i]=x[i]
+    }
+  }
+  return(clean)
+}
+
+test=clean(x=df75$Twater,density=d[[1]])
+plot(df$DATE, df$Twater, type='o')
+lines(df75$DATE, test, type='o',col='red')
+```
+
+
+
+
+
