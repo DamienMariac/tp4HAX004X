@@ -501,6 +501,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>On que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).</p>
+<p>On plot la différence absolue entre les données originales et les données agrégées pour le palier 1.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>idx <span class="ot">&lt;-</span> <span class="fu">match</span>(aggregtout_P1<span class="sc">$</span>DATE, P1<span class="sc">$</span>DATE)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> P1<span class="sc">$</span>Twater[idx] <span class="sc">-</span> aggregtout_P1<span class="sc">$</span>Twater</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(d)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+-0.220000 -0.006667  0.000000 -0.001931  0.003333  0.426667        10 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">abs</span>(d))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+0.000000 0.000000 0.004667 0.010173 0.013333 0.426667       10 </code></pre>
+</div>
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(aggregtout_P1<span class="sc">$</span>DATE, <span class="fu">abs</span>(d), <span class="at">type=</span><span class="st">"p"</span>, <span class="at">cex=</span><span class="fl">0.4</span>,</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Date"</span>, <span class="at">ylab=</span><span class="st">"|Brut - Moyenne(75min)|"</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h=</span><span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>), <span class="at">lty=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l’analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).</p>
 </section>
 </section>
 <section id="traitement-des-outliers-et-des-données-manquantes" class="level1" data-number="3">
@@ -511,98 +547,98 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>EM<span class="ot">=</span><span class="cf">function</span>(data, <span class="at">K=</span><span class="dv">3</span>, <span class="at">max_iter=</span><span class="dv">100</span>, <span class="at">tol=</span><span class="fl">1e-6</span>){</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  ts<span class="ot">=</span>data[<span class="sc">!</span><span class="fu">is.na</span>(data)]</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  n<span class="ot">=</span><span class="fu">length</span>(ts)</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  mu_k<span class="ot">=</span><span class="fu">as.numeric</span>(<span class="fu">quantile</span>(ts,<span class="at">probs=</span><span class="fu">seq</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>, <span class="at">length.out=</span>K)))</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  sigma_k<span class="ot">=</span><span class="fu">rep</span>(<span class="fu">sd</span>(ts), K)</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  eps_k<span class="ot">=</span><span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span>K, K)</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  loglik_old<span class="ot">=</span><span class="sc">-</span><span class="cn">Inf</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (iter <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_iter){</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape E</span></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    dens<span class="ot">=</span><span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span>K, <span class="cf">function</span>(k)</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>      eps_k[k]<span class="sc">*</span><span class="fu">dnorm</span>(ts, mu_k[k], sigma_k[k])</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    dens_sum<span class="ot">=</span><span class="fu">rowSums</span>(dens)</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    dens_sum[dens_sum<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    gamma<span class="ot">=</span>dens<span class="sc">/</span>dens_sum</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape M</span></span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    N_k<span class="ot">=</span><span class="fu">colSums</span>(gamma)</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    eps_k<span class="ot">=</span>N_k<span class="sc">/</span>n</span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    mu_k<span class="ot">=</span><span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">matrix</span>(ts,n,K))<span class="sc">/</span>N_k</span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    sigma_k<span class="ot">=</span><span class="fu">sqrt</span>(<span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">sweep</span>(<span class="fu">matrix</span>(ts,n,K), <span class="dv">2</span>, mu_k, <span class="at">FUN=</span><span class="st">"-"</span>)<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span>N_k)</span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    sigma_k[sigma_k<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    loglik<span class="ot">=</span><span class="fu">sum</span>(<span class="fu">log</span>(dens_sum))</span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">abs</span>(loglik <span class="sc">-</span> loglik_old)<span class="sc">&lt;</span>tol) <span class="cf">break</span></span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    loglik_old<span class="ot">=</span>loglik</span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">eps=</span>eps_k, <span class="at">mu=</span>mu_k, <span class="at">sigma=</span>sigma_k, <span class="at">loglik=</span>loglik)</span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>EM<span class="ot">=</span><span class="cf">function</span>(data, <span class="at">K=</span><span class="dv">3</span>, <span class="at">max_iter=</span><span class="dv">100</span>, <span class="at">tol=</span><span class="fl">1e-6</span>){</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  ts<span class="ot">=</span>data[<span class="sc">!</span><span class="fu">is.na</span>(data)]</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  n<span class="ot">=</span><span class="fu">length</span>(ts)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  mu_k<span class="ot">=</span><span class="fu">as.numeric</span>(<span class="fu">quantile</span>(ts,<span class="at">probs=</span><span class="fu">seq</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>, <span class="at">length.out=</span>K)))</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  sigma_k<span class="ot">=</span><span class="fu">rep</span>(<span class="fu">sd</span>(ts), K)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  eps_k<span class="ot">=</span><span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span>K, K)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  loglik_old<span class="ot">=</span><span class="sc">-</span><span class="cn">Inf</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (iter <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_iter){</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape E</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    dens<span class="ot">=</span><span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span>K, <span class="cf">function</span>(k)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>      eps_k[k]<span class="sc">*</span><span class="fu">dnorm</span>(ts, mu_k[k], sigma_k[k])</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    dens_sum<span class="ot">=</span><span class="fu">rowSums</span>(dens)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>    dens_sum[dens_sum<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    gamma<span class="ot">=</span>dens<span class="sc">/</span>dens_sum</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape M</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    N_k<span class="ot">=</span><span class="fu">colSums</span>(gamma)</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>    eps_k<span class="ot">=</span>N_k<span class="sc">/</span>n</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>    mu_k<span class="ot">=</span><span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">matrix</span>(ts,n,K))<span class="sc">/</span>N_k</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>    sigma_k<span class="ot">=</span><span class="fu">sqrt</span>(<span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">sweep</span>(<span class="fu">matrix</span>(ts,n,K), <span class="dv">2</span>, mu_k, <span class="at">FUN=</span><span class="st">"-"</span>)<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span>N_k)</span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>    sigma_k[sigma_k<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>    loglik<span class="ot">=</span><span class="fu">sum</span>(<span class="fu">log</span>(dens_sum))</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">abs</span>(loglik <span class="sc">-</span> loglik_old)<span class="sc">&lt;</span>tol) <span class="cf">break</span></span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>    loglik_old<span class="ot">=</span>loglik</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">eps=</span>eps_k, <span class="at">mu=</span>mu_k, <span class="at">sigma=</span>sigma_k, <span class="at">loglik=</span>loglik)</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Estimation des paramètres pour chaque variable</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>parametres<span class="ot">=</span><span class="fu">list</span>(<span class="fu">EM</span>(df75<span class="sc">$</span>Twater),<span class="fu">EM</span>(df75<span class="sc">$</span>O2sat),<span class="fu">EM</span>(df75<span class="sc">$</span>Chltot))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>parametres<span class="ot">=</span><span class="fu">list</span>(<span class="fu">EM</span>(df75<span class="sc">$</span>Twater),<span class="fu">EM</span>(df75<span class="sc">$</span>O2sat),<span class="fu">EM</span>(df75<span class="sc">$</span>Chltot))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Estimation de la densité pour chaque variable</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>dens<span class="ot">=</span><span class="cf">function</span>(x,param){</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span><span class="fu">c</span>()</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    s<span class="ot">=</span><span class="fu">c</span>()</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>){</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>      s<span class="ot">=</span><span class="fu">c</span>(s,param<span class="sc">$</span>eps[j]<span class="sc">*</span><span class="fu">dnorm</span>(x[i],param<span class="sc">$</span>mu[j],param<span class="sc">$</span>sigma[j]))</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    d<span class="ot">=</span><span class="fu">c</span>(d,<span class="fu">sum</span>(s))</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(d)</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>d<span class="ot">=</span><span class="fu">list</span>(<span class="fu">dens</span>(df75<span class="sc">$</span>Twater,parametres[[<span class="dv">1</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>O2sat,parametres[[<span class="dv">2</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>Chltot,parametres[[<span class="dv">3</span>]]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>dens<span class="ot">=</span><span class="cf">function</span>(x,param){</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span><span class="fu">c</span>()</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    s<span class="ot">=</span><span class="fu">c</span>()</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>){</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>      s<span class="ot">=</span><span class="fu">c</span>(s,param<span class="sc">$</span>eps[j]<span class="sc">*</span><span class="fu">dnorm</span>(x[i],param<span class="sc">$</span>mu[j],param<span class="sc">$</span>sigma[j]))</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    d<span class="ot">=</span><span class="fu">c</span>(d,<span class="fu">sum</span>(s))</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(d)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>d<span class="ot">=</span><span class="fu">list</span>(<span class="fu">dens</span>(df75<span class="sc">$</span>Twater,parametres[[<span class="dv">1</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>O2sat,parametres[[<span class="dv">2</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>Chltot,parametres[[<span class="dv">3</span>]]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Attribution des NA pour des densité faibles</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>clean<span class="ot">=</span><span class="cf">function</span>(x,density,<span class="at">seuil=</span><span class="fl">0.01</span>){</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span>density</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  clean<span class="ot">=</span><span class="fu">rep</span>(<span class="cn">NA</span>,l)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (d[i]<span class="sc">&gt;=</span> seuil){</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>      clean[i]<span class="ot">=</span>x[i]</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(clean)</span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>test<span class="ot">=</span><span class="fu">clean</span>(<span class="at">x=</span>df75<span class="sc">$</span>Twater,<span class="at">density=</span>d[[<span class="dv">1</span>]])</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(df<span class="sc">$</span>DATE, df<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">'o'</span>)</span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(df75<span class="sc">$</span>DATE, test, <span class="at">type=</span><span class="st">'o'</span>,<span class="at">col=</span><span class="st">'red'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>clean<span class="ot">=</span><span class="cf">function</span>(x,density,<span class="at">seuil=</span><span class="fl">0.01</span>){</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span>density</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  clean<span class="ot">=</span><span class="fu">rep</span>(<span class="cn">NA</span>,l)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (d[i]<span class="sc">&gt;=</span> seuil){</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>      clean[i]<span class="ot">=</span>x[i]</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(clean)</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>test<span class="ot">=</span><span class="fu">clean</span>(<span class="at">x=</span>df75<span class="sc">$</span>Twater,<span class="at">density=</span>d[[<span class="dv">1</span>]])</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(df<span class="sc">$</span>DATE, df<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">'o'</span>)</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(df75<span class="sc">$</span>DATE, test, <span class="at">type=</span><span class="st">'o'</span>,<span class="at">col=</span><span class="st">'red'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>

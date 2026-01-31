@@ -319,6 +319,27 @@ lines(aggregtout_P5$DATE, aggregtout_P5$Twater, col="red", type="l")
 On que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).
 
 
+
+On plot la différence absolue entre les données originales et les données agrégées pour le palier 1.
+
+```{r}
+
+
+idx <- match(aggregtout_P1$DATE, P1$DATE)
+d <- P1$Twater[idx] - aggregtout_P1$Twater
+
+summary(d)
+summary(abs(d))
+
+plot(aggregtout_P1$DATE, abs(d), type="p", cex=0.4,
+     xlab="Date", ylab="|Brut - Moyenne(75min)|")
+abline(h=c(0.01, 0.05, 0.1), lty=2)
+
+```
+
+Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l'analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).
+
+
 # Traitement des outliers et des données manquantes
 
 ## Estimation de la densité par mélange gaussien
