@@ -177,13 +177,151 @@ lines(df75$DATE, df75$Twater, type="l",col="red")
 Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.
 
 ```{r}
+df <- read.csv("data_lake_2.csv")
+df$DATE <- as.POSIXct(df$DATE, format = "%Y-%m-%dT%H:%M:%S", tz = "UTC")
 
+P1 <- df[df$palier == 1,]
+P2 <- df[df$palier == 2,]
+P3 <- df[df$palier == 3,]
+P4 <- df[df$palier == 4,]
+P5 <- df[df$palier == 5,]
 
 ```
 
+
+Pour chaque palier, on fragmente les données en blocs d'observations proches en date (moins de 100000 secondes d'écart entre deux observations successives qui est arbitraire par rapport à l'observations des histogramme au-dessus). On traitera ensuite chaque bloc indépendamment en agrégant les données à une fréquence de 1h15.
+
+Cette fois on crée une fonction pour pouvoir réutiliser le code plus facilement (5 fois pour les 5 paliers).
+
+```{r}
+# On fragmente les données en bloc d'observations proches en date pour le palier 1
+
+frag <- function(X, gap = 100000){
+  X <- X[order(X$DATE),]
+  t <- as.numeric(X$DATE)
+  n <- length(t)
+  if(n <= 1) return(list(X)) # on sait jamais
+
+  gaps <- diff(t)
+
+  blocs <- list()
+  k <- 0
+  j <- 0
+
+  for(i in 1:(n-1)){
+    if(gaps[i] > gap){
+      k <- k + 1
+      blocs[[k]] <- X[(j+1):i, , drop = FALSE]
+      j <- i
+    }
+  }
+
+  # dernier bloc
+  k <- k + 1
+  blocs[[k]] <- X[(j+1):n, , drop = FALSE]
+
+  blocs
+}
+
+blocs1 <- frag(P1, gap = 100000)
+blocs2 <- frag(P2, gap = 100000)
+blocs3 <- frag(P3, gap = 100000)
+blocs4 <- frag(P4, gap = 100000)
+blocs5 <- frag(P5, gap = 100000)
+
+
+plot(blocs1[[1]]$DATE, blocs1[[1]]$Twater, type="l", main="Bloc 1 palier 1")
+plot(blocs1[[2]]$DATE, blocs1[[2]]$Twater, type="l",main="Bloc 2 palier 1")
+
+```
+
+
+On crée une fonction d'agrégation pour un bloc de données. On calcule la moyenne des observations dans chaque intervalle de temps de 1h15 au maximum.
+
+Il peut y avoir des observations trop espacées (> 1h15). On décide donc de moyenner les observations dans des fenêtres de temps de 1h15 maximum. Si les observations sont trop espacées, on crée plusieurs moyennes dans le bloc.
+
+```{r}
+
+aggregv2 <- function(X, temps = 75*60){
+  X <- X[order(X$DATE), ]
+  n <- nrow(X)
+
+  out <- data.frame(DATE = as.POSIXct(character()),Twater = numeric(),O2sat  = numeric(),
+    Chltot = numeric())
+
+  i <- 1
+  while(i <= n){
+    j <- i
+    # avancer j tant que on reste dans la fenêtre et dans les bornes
+    while(j < n && as.numeric(difftime(X$DATE[j+1], X$DATE[i], units="secs")) < temps){
+      j <- j + 1
+    }
+
+    out <- rbind(out, data.frame(
+      DATE   = X$DATE[i],
+      Twater = mean(X$Twater[i:j], na.rm = TRUE),
+      O2sat  = mean(X$O2sat[i:j],  na.rm = TRUE),
+      Chltot = mean(X$Chltot[i:j], na.rm = TRUE)
+    ))
+
+    i <- j + 1
+  }
+
+  out
+}
+
+aggregv2_bloc1 <- aggregv2(blocs1[[1]], temps = 75*60)
+```
+
+
+
+Ici, on applique la fonction d'agrégation à chaque fragment de chaque palier, puis on reconstitue le jeu de données agrégé pour chaque palier.
+
+
+```{r}
+# On applique la fonction à chaque fragment du jeu de données
+
+aggregtout <- function(X, temps = 75*60){
+  out_list <- lapply(X, aggregv2, temps = temps)
+  out <- do.call(rbind, out_list)
+  rownames(out) <- NULL
+  out
+}
+
+aggregtout_P1 <- aggregtout(blocs1, temps = 75*60)
+aggregtout_P2 <- aggregtout(blocs2, temps = 75*60)
+aggregtout_P3 <- aggregtout(blocs3, temps = 75*60)
+aggregtout_P4 <- aggregtout(blocs4, temps = 75*60)
+aggregtout_P5 <- aggregtout(blocs5, temps = 75*60)
+```
+
+
+Voici une visualisation des données agrégées pour chaque palier, en comparant les données originales et les données agrégées.
+
+```{r}
+plot(P1$DATE, P1$Twater, type="l")
+lines(aggregtout_P1$DATE, aggregtout_P1$Twater, col="red", type="l")
+
+plot(P2$DATE, P2$Twater, type="l")
+lines(aggregtout_P2$DATE, aggregtout_P2$Twater, col="red", type="l")
+
+plot(P3$DATE, P3$Twater, type="l")
+lines(aggregtout_P3$DATE, aggregtout_P3$Twater, col="red", type="l")
+
+plot(P4$DATE, P4$Twater, type="l")
+lines(aggregtout_P4$DATE, aggregtout_P4$Twater, col="red", type="l")
+
+plot(P5$DATE, P5$Twater, type="l")
+lines(aggregtout_P5$DATE, aggregtout_P5$Twater, col="red", type="l")
+
+```
+
+On que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).
+
+
 # Traitement des outliers et des données manquantes
 
-## Estimation de la densité par mélange gaussien 
+## Estimation de la densité par mélange gaussien
 
 Algorithme EM
 ```{r}
@@ -228,12 +366,12 @@ EM=function(data, K=3, max_iter=100, tol=1e-6){
 }
 ```
 
-Estimation des paramètres pour chaque variable 
+Estimation des paramètres pour chaque variable
 ```{r}
 parametres=list(EM(df75$Twater),EM(df75$O2sat),EM(df75$Chltot))
 ```
 
-Estimation de la densité pour chaque variable 
+Estimation de la densité pour chaque variable
 ```{r}
 dens=function(x,param){
   d=c()
@@ -251,7 +389,7 @@ dens=function(x,param){
 d=list(dens(df75$Twater,parametres[[1]]),dens(df75$O2sat,parametres[[2]]),dens(df75$Chltot,parametres[[3]]))
 ```
 
-Attribution des NA pour des densité faibles 
+Attribution des NA pour des densité faibles
 ```{r}
 clean=function(x,density,seuil=0.01){
   d=density
