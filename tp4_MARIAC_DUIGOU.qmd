@@ -269,8 +269,3 @@ test=clean(x=df75$Twater,density=d[[1]])
 plot(df$DATE, df$Twater, type='o')
 lines(df75$DATE, test, type='o',col='red')
 ```
-
-
-
-
-
