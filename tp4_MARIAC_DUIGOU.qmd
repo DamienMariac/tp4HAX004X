@@ -24,3 +24,159 @@ execute:
   message: false
 ---
 
+# Contexte
+
+Il s'agit d'un autre jeu de données de lac (un différent).
+Cette fois ci il y a des mesures de température de l'eau, de saturation en oxygène et de chlorophylle totale.
+La température est mesurée à différents paliers de profondeur (palier 1 = surface, palier 5 = fond).
+Les données couvrent la période de 2020 à mi 2022.
+Il y a des trous dans les données, mais globalement la fréquence d'échantillonnage est bonne.
+Votre tache sera de
+- faire une analyse rapide de ces données
+- Réduire le jeu de données à une fréquence de 1h15
+- compléter les trous par interpolation raisonnable (pas "trop grand trou")
+- traiter les outliers éventuels
+- produire des visualisations claires et pertinentes
+
+# Nettoyage des données
+
+## Première approche : agrégation simple
+
+Les données ne sont pas bien espacées dans le temps. Il y'a des données toutes les 20/30 secondes en moyenne mais aussi des trous de plusieurs heures.
+
+```{r}
+df <- read.csv("data_lake_2.csv")
+df$DATE <- as.POSIXct(df$DATE, format = "%Y-%m-%dT%H:%M:%S", tz = "UTC")
+```
+
+Voici une visualisation des écarts entre deux mesures successives. On remarque qu'il y'a des écarts très importants (plusieurs jours) mais aussi des écarts très faibles (quelques secondes).
+
+```{r}
+gaps <- as.numeric(diff(df$DATE))
+
+gaps_extreme <- gaps[gaps>86400] # plus de 1j
+hist(gaps_extreme,breaks=50)
+
+gaps_moy <- gaps[gaps<=3600] # moins de 1h
+hist(gaps_moy, breaks=50)
+```
+
+
+
+Notre stratégie pour nettoyer les données sera de fragmenter les données en blocs d'observations proches en date (moins de 100000 secondes d'écart entre deux observations successives qui est arbitraire par rapport à l'observations des histogramme au-dessus). On traitera ensuite chaque bloc indépendamment en agrégant les données à une fréquence de 1h15.
+
+
+```{r}
+# On fragmente les données en bloc d'observations proches en date
+temps <- as.numeric(df$DATE)
+n <- length(temps)
+gaps <- diff(temps)
+
+blocs <- list()
+k <- 0
+j <- 0
+for(i in 1:(n-1)){
+  if(gaps[i] > 100000){
+    k <- k+1
+    blocs[[k]] <- df[(j+1):i,]
+
+    j <- i
+  }else{}
+}
+k <- k + 1
+blocs[[k]] <- df[(j+1):n, ]
+blocs[[1]]
+
+```
+
+
+
+
+
+
+Puis on aggrège chaque bloc à une fréquence de 1h15 en utilisant la moyenne des observations dans chaque intervalle de temps.
+
+```{r}
+# fonction qui aggrège les données en blocs de 1h15
+
+reducbloc <- function(X, reduc = 75*60){
+
+  X$DATE <- as.POSIXct(X$DATE, format="%Y-%m-%d %H:%M:%S", tz="UTC")
+  X <- X[order(X$DATE), ]
+
+  X$Twater <- as.numeric(X$Twater)
+  X$O2sat  <- as.numeric(X$O2sat)
+  X$Chltot <- as.numeric(X$Chltot)
+
+  temps <- as.numeric(X$DATE)
+  n <- nrow(X)
+
+  out <- data.frame(DATE=as.POSIXct(character()), Twater=numeric(),
+                    O2sat=numeric(), Chltot=numeric(), stringsAsFactors=FALSE)
+
+  j <- 1
+  t0 <- temps[1]
+  k <- 0
+
+  for(i in 1:n){
+    if(temps[i] - t0 >= reduc){
+      k <- k + 1
+      out[k, "DATE"]   <- X$DATE[j]
+      out[k, "Twater"] <- mean(X$Twater[j:(i-1)], na.rm=TRUE)
+      out[k, "O2sat"]  <- mean(X$O2sat [j:(i-1)], na.rm=TRUE)
+      out[k, "Chltot"] <- mean(X$Chltot[j:(i-1)], na.rm=TRUE)
+
+      j <- i
+      t0 <- temps[i]
+    }
+  }
+
+  # dernier bloc
+  k <- k + 1
+  out[k, "DATE"]   <- X$DATE[j]
+  out[k, "Twater"] <- mean(X$Twater[j:n], na.rm=TRUE)
+  out[k, "O2sat"]  <- mean(X$O2sat [j:n], na.rm=TRUE)
+  out[k, "Chltot"] <- mean(X$Chltot[j:n], na.rm=TRUE)
+
+  out
+}
+```
+
+
+
+
+
+Puis on applique cette fonction à chaque bloc et on reconstitue le jeu de données nettoyé. Et on concatène les blocs nettoyés pour reconstituer le jeu de données nettoyé.
+
+
+```{r}
+agg_list <- list()
+
+for(b in 1:length(blocs)){
+  agg_list[[b]] <- reducbloc(blocs[[b]], reduc = 75*60)
+}
+
+df75 <- do.call(rbind, agg_list)
+
+df75 <- df75[order(df75$DATE), ]
+
+head(df75)
+nrow(df75)
+```
+
+On plotte les données nettoyées pour Twater.
+
+```{r}
+plot(df$DATE, df$Twater, type="l")
+lines(df75$DATE, df75$Twater, type="l",col="red")
+```
+
+
+## Deuxième approche : Agrégation en fonction du palier de profondeur
+
+Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.
+
+```{r}
+
+
+```
