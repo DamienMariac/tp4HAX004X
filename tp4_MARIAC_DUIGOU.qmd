@@ -414,12 +414,11 @@ dens=function(x,param){
 
 Attribution des NA pour des densité faibles
 ```{r}
-clean=function(x,density,seuil=0.01){
-  density
+clean=function(x,d,seuil=0.01){
   l=length(x)
   clean=rep(NA,l)
   for (i in 1:l){
-    if (density[i]>= seuil){
+    if (!is.na(d[i]) && d[i] >= seuil){
       clean[i]=x[i]
     }
   }
@@ -455,7 +454,7 @@ EM_for_na <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
     #ETAPE E
     for (i in 1:n) {
       mi <- miss[i, ]
-      if (!any(mi)) next
+      if (!any(mi) || all(mi)) next
       oi <- !mi
 
       Soo <- S[oi, oi, drop=FALSE] + ridge*diag(sum(oi))
@@ -470,9 +469,10 @@ EM_for_na <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
     mu <- colMeans(Ximp)
     S  <- cov(Ximp) + ridge*diag(p)
 
-    dmu <- norm(mu - mu0, "2") / (norm(mu0, "2") + 1e-12)
-    dS  <- norm(S - S0,  "F") / (norm(S0,  "F") + 1e-12)
-    if (max(dmu, dS) < tol) break
+    dmu <- norm(mu - mu0, "2") / max(norm(mu0, "2"), 1e-12)
+    dS  <- norm(S - S0,  "F") / max(norm(S0, "F"), 1e-12)
+    crit <- max(dmu, dS)
+    if (!is.na(crit) && crit < tol) break
   }
 
   list(X_imp = Ximp, mu = mu, Sigma = S, n_iter = it)
@@ -490,9 +490,9 @@ traitement=function(i){
   x=aggreg_list[[i]]
   parametres=param(x)
   d=list(dens(x$Twater,parametres[[1]]),dens(x$O2sat,parametres[[2]]),dens(x$Chltot,parametres[[3]]))
-  cleaned_data=list(clean(x=x$Twater,density=d[[1]]),clean(x=x$o2sat,density=d[[2]]),clean(x=x$Chltot,density=d[[3]]))
-  cleaned_data=EM_for_na(cleaned_data)
-  cleaned_data=data.frame(DATE=x$DATE,cleaned_data)
+  cleaned_data=list(clean(x=x$Twater,d=d[[1]]),clean(x=x$O2sat,d=d[[2]]),clean(x=x$Chltot,d=d[[3]]))
+  #cleaned_data=EM_for_na(as.data.frame(cleaned_data))
+  #cleaned_data=data.frame(DATE=x$DATE,cleaned_data)
   return(cleaned_data)
 }
 ```
@@ -500,5 +500,10 @@ traitement=function(i){
 ```{r}
 test=traitement(1)
 ```
+
+```{r}
+plot(aggregtout_P1$DATE,test[[1]])
+```
+
 
 
