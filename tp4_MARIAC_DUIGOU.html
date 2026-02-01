@@ -73,6 +73,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="tp4_MARIAC_DUIGOU_files/libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
 <script src="tp4_MARIAC_DUIGOU_files/libs/pagedtable-1.1/js/pagedtable.js"></script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -89,10 +118,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#première-approche-agrégation-simple" id="toc-première-approche-agrégation-simple" class="nav-link" data-scroll-target="#première-approche-agrégation-simple"><span class="header-section-number">2.1</span> Première approche : agrégation simple</a></li>
   <li><a href="#deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" id="toc-deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" class="nav-link" data-scroll-target="#deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur"><span class="header-section-number">2.2</span> Deuxième approche : Agrégation en fonction du palier de profondeur</a></li>
+  <li><a href="#traitement-des-données-maquantes" id="toc-traitement-des-données-maquantes" class="nav-link" data-scroll-target="#traitement-des-données-maquantes"><span class="header-section-number">2.3</span> Traitement des données maquantes</a></li>
   </ul></li>
-  <li><a href="#traitement-des-outliers-et-des-données-manquantes" id="toc-traitement-des-outliers-et-des-données-manquantes" class="nav-link" data-scroll-target="#traitement-des-outliers-et-des-données-manquantes"><span class="header-section-number">3</span> Traitement des outliers et des données manquantes</a>
+  <li><a href="#visualisation-des-données" id="toc-visualisation-des-données" class="nav-link" data-scroll-target="#visualisation-des-données"><span class="header-section-number">3</span> Visualisation des données</a>
   <ul class="collapse">
-  <li><a href="#estimation-de-la-densité-par-mélange-gaussien" id="toc-estimation-de-la-densité-par-mélange-gaussien" class="nav-link" data-scroll-target="#estimation-de-la-densité-par-mélange-gaussien"><span class="header-section-number">3.1</span> Estimation de la densité par mélange gaussien</a></li>
+  <li><a href="#boîte-à-moustaches" id="toc-boîte-à-moustaches" class="nav-link" data-scroll-target="#boîte-à-moustaches"><span class="header-section-number">3.1</span> Boîte à moustaches</a></li>
+  <li><a href="#étude-de-la-volatilité-en-fonction-du-palier" id="toc-étude-de-la-volatilité-en-fonction-du-palier" class="nav-link" data-scroll-target="#étude-de-la-volatilité-en-fonction-du-palier"><span class="header-section-number">3.2</span> Étude de la volatilité en fonction du palier</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -360,7 +391,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>blocs5 <span class="ot">&lt;-</span> <span class="fu">frag</span>(P5, <span class="at">gap =</span> <span class="dv">100000</span>)</span>
 <span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(blocs1[[<span class="dv">1</span>]]<span class="sc">$</span>DATE, blocs1[[<span class="dv">1</span>]]<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">main=</span><span class="st">"Bloc 1 palier 1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(blocs1[[<span class="dv">1</span>]]<span class="sc">$</span>DATE, blocs1[[<span class="dv">1</span>]]<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">"l"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -371,7 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(blocs1[[<span class="dv">2</span>]]<span class="sc">$</span>DATE, blocs1[[<span class="dv">2</span>]]<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">"l"</span>,<span class="at">main=</span><span class="st">"Bloc 2 palier 1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(blocs1[[<span class="dv">2</span>]]<span class="sc">$</span>DATE, blocs1[[<span class="dv">2</span>]]<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">"l"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -412,9 +445,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>  out</span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>aggregv2_bloc1 <span class="ot">&lt;-</span> <span class="fu">aggregv2</span>(blocs1[[<span class="dv">1</span>]], <span class="at">temps =</span> <span class="dv">75</span><span class="sc">*</span><span class="dv">60</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Ici, on applique la fonction d’agrégation à chaque fragment de chaque palier, puis on reconstitue le jeu de données agrégé pour chaque palier.</p>
@@ -500,7 +531,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>On que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).</p>
+<p>On voit que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).</p>
 <p>On plot la différence absolue entre les données originales et les données agrégées pour le palier 1.</p>
 <div class="cell">
 <details class="code-fold">
@@ -538,102 +569,132 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l’analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).</p>
 </section>
-</section>
-<section id="traitement-des-outliers-et-des-données-manquantes" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Traitement des outliers et des données manquantes</h1>
-<section id="estimation-de-la-densité-par-mélange-gaussien" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="estimation-de-la-densité-par-mélange-gaussien"><span class="header-section-number">3.1</span> Estimation de la densité par mélange gaussien</h2>
-<p>Algorithme EM</p>
+<section id="traitement-des-données-maquantes" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="traitement-des-données-maquantes"><span class="header-section-number">2.3</span> Traitement des données maquantes</h2>
+<p>Il reste maintenant à traiter les données manquantes (NA) dans nos jeux de données nettoyés. Nous allons utiliser un algorithme EM pour estimer les valeurs manquantes en supposant que les données suivent une distribution normale multivariée.</p>
+<p>Pour cela, nous allons implémenter l’algorithme EM que nous avons codé précédemment dans le TP3.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>EM<span class="ot">=</span><span class="cf">function</span>(data, <span class="at">K=</span><span class="dv">3</span>, <span class="at">max_iter=</span><span class="dv">100</span>, <span class="at">tol=</span><span class="fl">1e-6</span>){</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  ts<span class="ot">=</span>data[<span class="sc">!</span><span class="fu">is.na</span>(data)]</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  n<span class="ot">=</span><span class="fu">length</span>(ts)</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  mu_k<span class="ot">=</span><span class="fu">as.numeric</span>(<span class="fu">quantile</span>(ts,<span class="at">probs=</span><span class="fu">seq</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>, <span class="at">length.out=</span>K)))</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  sigma_k<span class="ot">=</span><span class="fu">rep</span>(<span class="fu">sd</span>(ts), K)</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  eps_k<span class="ot">=</span><span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span>K, K)</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  loglik_old<span class="ot">=</span><span class="sc">-</span><span class="cn">Inf</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (iter <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_iter){</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape E</span></span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    dens<span class="ot">=</span><span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span>K, <span class="cf">function</span>(k)</span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>      eps_k[k]<span class="sc">*</span><span class="fu">dnorm</span>(ts, mu_k[k], sigma_k[k])</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    dens_sum<span class="ot">=</span><span class="fu">rowSums</span>(dens)</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>    dens_sum[dens_sum<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    gamma<span class="ot">=</span>dens<span class="sc">/</span>dens_sum</span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Etape M</span></span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    N_k<span class="ot">=</span><span class="fu">colSums</span>(gamma)</span>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>EM <span class="ot">&lt;-</span> <span class="cf">function</span>(X, <span class="at">max_iter=</span><span class="dv">50</span>, <span class="at">tol=</span><span class="fl">1e-4</span>, <span class="at">ridge=</span><span class="fl">1e-6</span>) {</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(X)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(X)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ncol</span>(X)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  miss <span class="ot">&lt;-</span> <span class="fu">is.na</span>(X)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#INITIALISATION</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  Ximp <span class="ot">&lt;-</span> X</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  cm <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(X, <span class="at">na.rm=</span><span class="cn">TRUE</span>)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>p){</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    Ximp[miss[,j], j] <span class="ot">&lt;-</span> cm[j]</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(Ximp)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  S <span class="ot">&lt;-</span> <span class="fu">cov</span>(Ximp) <span class="sc">+</span> ridge<span class="sc">*</span><span class="fu">diag</span>(p)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (it <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>max_iter) {</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    mu0 <span class="ot">&lt;-</span> mu; S0 <span class="ot">&lt;-</span> S</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">#ETAPE E</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>      mi <span class="ot">&lt;-</span> miss[i, ]</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="sc">!</span><span class="fu">any</span>(mi)) <span class="cf">next</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>      oi <span class="ot">&lt;-</span> <span class="sc">!</span>mi</span>
 <span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>    eps_k<span class="ot">=</span>N_k<span class="sc">/</span>n</span>
-<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>    mu_k<span class="ot">=</span><span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">matrix</span>(ts,n,K))<span class="sc">/</span>N_k</span>
-<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>    sigma_k<span class="ot">=</span><span class="fu">sqrt</span>(<span class="fu">colSums</span>(gamma<span class="sc">*</span><span class="fu">sweep</span>(<span class="fu">matrix</span>(ts,n,K), <span class="dv">2</span>, mu_k, <span class="at">FUN=</span><span class="st">"-"</span>)<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span>N_k)</span>
-<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>    sigma_k[sigma_k<span class="sc">&lt;</span>tol]<span class="ot">=</span>tol</span>
-<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>    loglik<span class="ot">=</span><span class="fu">sum</span>(<span class="fu">log</span>(dens_sum))</span>
-<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">abs</span>(loglik <span class="sc">-</span> loglik_old)<span class="sc">&lt;</span>tol) <span class="cf">break</span></span>
-<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>    loglik_old<span class="ot">=</span>loglik</span>
-<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">eps=</span>eps_k, <span class="at">mu=</span>mu_k, <span class="at">sigma=</span>sigma_k, <span class="at">loglik=</span>loglik)</span>
-<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>      Soo <span class="ot">&lt;-</span> S[oi, oi, drop<span class="ot">=</span><span class="cn">FALSE</span>] <span class="sc">+</span> ridge<span class="sc">*</span><span class="fu">diag</span>(<span class="fu">sum</span>(oi))</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>      Sm_o <span class="ot">&lt;-</span> S[mi, oi, drop<span class="ot">=</span><span class="cn">FALSE</span>]</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>      x_o <span class="ot">&lt;-</span> Ximp[i, oi]</span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>      Ximp[i, mi] <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(mu[mi] <span class="sc">+</span> Sm_o <span class="sc">%*%</span> <span class="fu">solve</span>(Soo) <span class="sc">%*%</span> (x_o <span class="sc">-</span> mu[oi]))</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">#ETAPE M</span></span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>    mu <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(Ximp)</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>    S  <span class="ot">&lt;-</span> <span class="fu">cov</span>(Ximp) <span class="sc">+</span> ridge<span class="sc">*</span><span class="fu">diag</span>(p)</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>    dmu <span class="ot">&lt;-</span> <span class="fu">norm</span>(mu <span class="sc">-</span> mu0, <span class="st">"2"</span>) <span class="sc">/</span> (<span class="fu">norm</span>(mu0, <span class="st">"2"</span>) <span class="sc">+</span> <span class="fl">1e-12</span>)</span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>    dS  <span class="ot">&lt;-</span> <span class="fu">norm</span>(S <span class="sc">-</span> S0,  <span class="st">"F"</span>) <span class="sc">/</span> (<span class="fu">norm</span>(S0,  <span class="st">"F"</span>) <span class="sc">+</span> <span class="fl">1e-12</span>)</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">max</span>(dmu, dS) <span class="sc">&lt;</span> tol) <span class="cf">break</span></span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">X_imp =</span> Ximp, <span class="at">mu =</span> mu, <span class="at">Sigma =</span> S, <span class="at">n_iter =</span> it)</span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Estimation des paramètres pour chaque variable</p>
+<p>On implémente l’algorithme EM sur chaque palier de profondeur puis on ajoute la colonne DATE pour pouvoir visualiser les résultats (pour Twater ici).</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>parametres<span class="ot">=</span><span class="fu">list</span>(<span class="fu">EM</span>(df75<span class="sc">$</span>Twater),<span class="fu">EM</span>(df75<span class="sc">$</span>O2sat),<span class="fu">EM</span>(df75<span class="sc">$</span>Chltot))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>P1EM <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">EM</span>(aggregtout_P1[,<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">$</span>X_imp)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>P1EM<span class="sc">$</span>DATE <span class="ot">&lt;-</span> aggregtout_P1<span class="sc">$</span>DATE</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>P2EM <span class="ot">&lt;-</span>  <span class="fu">as.data.frame</span>(<span class="fu">EM</span>(aggregtout_P2[,<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">$</span>X_imp)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>P2EM<span class="sc">$</span>DATE <span class="ot">&lt;-</span> aggregtout_P2<span class="sc">$</span>DATE</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>P3EM <span class="ot">&lt;-</span>  <span class="fu">as.data.frame</span>(<span class="fu">EM</span>(aggregtout_P3[,<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">$</span>X_imp)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>P3EM<span class="sc">$</span>DATE <span class="ot">&lt;-</span> aggregtout_P3<span class="sc">$</span>DATE</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>P4EM <span class="ot">&lt;-</span>  <span class="fu">as.data.frame</span>(<span class="fu">EM</span>(aggregtout_P4[,<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">$</span>X_imp)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>P4EM<span class="sc">$</span>DATE <span class="ot">&lt;-</span> aggregtout_P4<span class="sc">$</span>DATE</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>P5EM <span class="ot">&lt;-</span>  <span class="fu">as.data.frame</span>(<span class="fu">EM</span>(aggregtout_P5[,<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])<span class="sc">$</span>X_imp)</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>P5EM<span class="sc">$</span>DATE <span class="ot">&lt;-</span> aggregtout_P5<span class="sc">$</span>DATE</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(aggregtout_P1<span class="sc">$</span>DATE, aggregtout_P1<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">"p"</span>, <span class="at">pch=</span><span class="dv">16</span>, <span class="at">cex=</span><span class="fl">0.4</span>,<span class="at">main=</span><span class="st">"Twater pour palier 1 avec données manquantes"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
-<p>Estimation de la densité pour chaque variable</p>
+</div>
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(P1EM<span class="sc">$</span>DATE, P1EM<span class="sc">$</span>X_imp[,<span class="dv">1</span>], <span class="at">type=</span><span class="st">"p"</span>, <span class="at">pch=</span><span class="dv">16</span>, <span class="at">cex=</span><span class="fl">0.4</span>,<span class="at">main =</span> <span class="st">"Twater pour palier 1 après imputation EM"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-14-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>##&nbsp;Traitement des outliers</p>
+</section>
+</section>
+<section id="visualisation-des-données" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Visualisation des données</h1>
+<section id="boîte-à-moustaches" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="boîte-à-moustaches"><span class="header-section-number">3.1</span> Boîte à moustaches</h2>
+<p>On concatène les données nettoyées pour chaque palier dans un seul dataframe pour faciliter la visualisation. On se penche sur l’idée de faire des boîtes à moustaches pour chaque palier et chaque variable.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>dens<span class="ot">=</span><span class="cf">function</span>(x,param){</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span><span class="fu">c</span>()</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    s<span class="ot">=</span><span class="fu">c</span>()</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>){</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>      s<span class="ot">=</span><span class="fu">c</span>(s,param<span class="sc">$</span>eps[j]<span class="sc">*</span><span class="fu">dnorm</span>(x[i],param<span class="sc">$</span>mu[j],param<span class="sc">$</span>sigma[j]))</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    d<span class="ot">=</span><span class="fu">c</span>(d,<span class="fu">sum</span>(s))</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(d)</span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>d<span class="ot">=</span><span class="fu">list</span>(<span class="fu">dens</span>(df75<span class="sc">$</span>Twater,parametres[[<span class="dv">1</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>O2sat,parametres[[<span class="dv">2</span>]]),<span class="fu">dens</span>(df75<span class="sc">$</span>Chltot,parametres[[<span class="dv">3</span>]]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>P1EM<span class="sc">$</span>palier <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>P2EM<span class="sc">$</span>palier <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>P3EM<span class="sc">$</span>palier <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>P4EM<span class="sc">$</span>palier <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>P5EM<span class="sc">$</span>palier <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(P1EM, P2EM, P3EM, P4EM, P5EM) <span class="sc">%&gt;%</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">palier =</span> <span class="fu">factor</span>(palier))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Attribution des NA pour des densité faibles</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Afficher / masquer le code</summary>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>clean<span class="ot">=</span><span class="cf">function</span>(x,density,<span class="at">seuil=</span><span class="fl">0.01</span>){</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">=</span>density</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  l<span class="ot">=</span><span class="fu">length</span>(x)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  clean<span class="ot">=</span><span class="fu">rep</span>(<span class="cn">NA</span>,l)</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>l){</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (d[i]<span class="sc">&gt;=</span> seuil){</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>      clean[i]<span class="ot">=</span>x[i]</span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(clean)</span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>test<span class="ot">=</span><span class="fu">clean</span>(<span class="at">x=</span>df75<span class="sc">$</span>Twater,<span class="at">density=</span>d[[<span class="dv">1</span>]])</span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(df<span class="sc">$</span>DATE, df<span class="sc">$</span>Twater, <span class="at">type=</span><span class="st">'o'</span>)</span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(df75<span class="sc">$</span>DATE, test, <span class="at">type=</span><span class="st">'o'</span>,<span class="at">col=</span><span class="st">'red'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> palier, <span class="at">y =</span> Twater, <span class="at">fill =</span> palier)) <span class="sc">+</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Palier"</span>, <span class="at">y=</span><span class="st">"Twater"</span>) <span class="sc">+</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -642,7 +703,298 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> palier, <span class="at">y =</span> Twater, <span class="at">fill =</span> palier)) <span class="sc">+</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Palier"</span>, <span class="at">y=</span><span class="st">"O2sat"</span>) <span class="sc">+</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-16-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
+</div>
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(data, <span class="fu">aes</span>(<span class="at">x =</span> palier, <span class="at">y =</span> Twater, <span class="at">fill =</span> palier)) <span class="sc">+</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Palier"</span>, <span class="at">y=</span><span class="st">"Chltot"</span>) <span class="sc">+</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-16-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Il n’y a pas de différences visibles entre les palier pour chaque variable. Bien que les variables on l’air de plus se concentrer autour de la moyenne pour de paliers plus grand.</p>
+<p>Ce dont on aurait du s’attendre d’après les premièrs graphiques. En effet, on capte à quelques exceptions près les mêmes tendances pour chaque palier.</p>
+</section>
+<section id="étude-de-la-volatilité-en-fonction-du-palier" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="étude-de-la-volatilité-en-fonction-du-palier"><span class="header-section-number">3.2</span> Étude de la volatilité en fonction du palier</h2>
+<p>En revanche, quelque chose d’intéressant à observer est la volatilité de chaque variable en fonction du palier. En effet, pour la palier 1, il semble que la courbe semble beacoup plus érratique par rapport au palier 5 où la courbe et plus lisse. Nous allons donc étudier la volatilité de chaque variable en fonction du palier.</p>
+<p>Notre idée et donc de calculer la variation absolue entre deux instants successifs pour chaque variable et chaque palier. C’est à dire : <span class="math display">\[
+\Delta X_t = |X_t - X_{t-1}|
+\]</span></p>
+<p>Avec <code>X</code> la variable considérée (<code>Twater, O2sat ou Chltot</code>) et <code>t</code> l’instant considéré.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Afficher / masquer le code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>vol <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(palier, DATE) <span class="sc">%&gt;%</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(palier) <span class="sc">%&gt;%</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dTwater =</span> <span class="fu">abs</span>(Twater <span class="sc">-</span> <span class="fu">lag</span>(Twater)),</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">dO2sat  =</span> <span class="fu">abs</span>(O2sat  <span class="sc">-</span> <span class="fu">lag</span>(O2sat)),</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">dChltot =</span> <span class="fu">abs</span>(Chltot <span class="sc">-</span> <span class="fu">lag</span>(Chltot))) <span class="sc">%&gt;%</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(dTwater, dO2sat, dChltot),</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"variable"</span>,</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"abs_delta"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.finite</span>(abs_delta)) <span class="sc">%&gt;%</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">variable =</span> <span class="fu">recode</span>(variable,</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>                           <span class="at">dTwater=</span><span class="st">"Twater"</span>,</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>                           <span class="at">dO2sat=</span><span class="st">"O2sat"</span>,</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>                           <span class="at">dChltot=</span><span class="st">"Chltot"</span>))</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(vol, <span class="fu">aes</span>(<span class="at">x =</span> palier, <span class="at">y =</span> abs_delta, <span class="at">fill =</span> palier)) <span class="sc">+</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">outlier.alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Palier"</span>, <span class="at">y=</span><span class="st">"|Δ| (variation entre 2 instants)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>La volatilité instantanée décroît globalement avec le palier pour <code>Twater</code> (série plus lisse aux paliers élevés). Pour <code>O2sat</code> et <code>Chltot</code>, la volatilité typique varie peu selon le palier, mais on observe dans tous les cas des épisodes ponctuels de variations extrêmes (surement du à des outliers ou a des phénomènes très particulier qu’on ne pourrait expliquer).</p>
+<!--
+# Traitement des outliers et des données manquantes
+
+Nous allons désormais faire un traitement des outliers sur les données agrégées pour chaque palier. Nous attribueront des NA à ces données manquantes par seuil de densité. Par la suite, nous utiliserons un algorithme EM pour opérer un traitement des valeurs manquantes (comme nous avions fait dans le précédent tp)
+
+## Traitement des outliers
+
+Algorithme EM pour estimer un mélange gaussien
+
+
+::: {.cell}
+
+```{.r .cell-code}
+EM=function(data, K=3, max_iter=100, tol=1e-6){
+  ts=data[!is.na(data)]
+  n=length(ts)
+
+  mu_k=as.numeric(quantile(ts,probs=seq(0.25, 0.75, length.out=K)))
+  sigma_k=rep(sd(ts), K)
+  eps_k=rep(1/K, K)
+
+  loglik_old=-Inf
+
+  for (iter in 1:max_iter){
+
+    # Etape E
+    dens=sapply(1:K, function(k)
+      eps_k[k]*dnorm(ts, mu_k[k], sigma_k[k])
+    )
+
+    dens_sum=rowSums(dens)
+    dens_sum[dens_sum<tol]=tol
+
+    gamma=dens/dens_sum
+
+    # Etape M
+    N_k=colSums(gamma)
+
+    eps_k=N_k/n
+    mu_k=colSums(gamma*matrix(ts,n,K))/N_k
+    sigma_k=sqrt(colSums(gamma*sweep(matrix(ts,n,K), 2, mu_k, FUN="-")^2)/N_k)
+
+    sigma_k[sigma_k<tol]=tol
+
+    loglik=sum(log(dens_sum))
+
+    if (abs(loglik - loglik_old)<tol) break
+    loglik_old=loglik
+  }
+
+  list(eps=eps_k, mu=mu_k, sigma=sigma_k, loglik=loglik)
+}
+```
+:::
+
+
+
+Estimation des paramètres pour chaque variable
+
+
+::: {.cell}
+
+```{.r .cell-code}
+param=function(x){
+  list(EM(x$Twater),EM(x$O2sat),EM(x$Chltot))
+}
+```
+:::
+
+
+
+Estimation de la densité pour chaque variable
+
+
+::: {.cell}
+
+```{.r .cell-code}
+dens=function(x,param){
+  d=c()
+  l=length(x)
+  for (i in 1:l){
+    s=c()
+    for (j in 1:3){
+      s=c(s,param$eps[j]*dnorm(x[i],param$mu[j],param$sigma[j]))
+    }
+    d=c(d,sum(s))
+  }
+  return(d)
+}
+```
+:::
+
+
+
+Attribution des NA pour des densité faibles
+
+
+::: {.cell}
+
+```{.r .cell-code}
+clean=function(x,d,seuil=0.01){
+  l=length(x)
+  clean=rep(NA,l)
+  for (i in 1:l){
+    if (!is.na(d[i]) && d[i] >= seuil){
+      clean[i]=x[i]
+    }
+  }
+  return(clean)
+}
+```
+:::
+
+
+
+
+Algorithme EM
+
+
+::: {.cell}
+
+```{.r .cell-code}
+EM_for_na <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
+  X <- as.matrix(X)
+  n <- nrow(X)
+  p <- ncol(X)
+  miss <- is.na(X)
+
+  #INITIALISATION
+  Ximp <- X
+  cm <- colMeans(X, na.rm=TRUE)
+  for (j in 1:p){
+    Ximp[miss[,j], j] <- cm[j]
+  }
+
+  mu <- colMeans(Ximp)
+  S <- cov(Ximp) + ridge*diag(p)
+
+  for (it in 1:max_iter) {
+    mu0 <- mu; S0 <- S
+
+    #ETAPE E
+    for (i in 1:n) {
+      mi <- miss[i, ]
+      if (!any(mi) || all(mi)) next
+      oi <- !mi
+
+      Soo <- S[oi, oi, drop=FALSE] + ridge*diag(sum(oi))
+      Sm_o <- S[mi, oi, drop=FALSE]
+
+      x_o <- Ximp[i, oi]
+      Ximp[i, mi] <- as.numeric(mu[mi] + Sm_o %*% solve(Soo) %*% (x_o - mu[oi]))
+    }
+
+    #ETAPE M
+    mu <- colMeans(Ximp)
+    S  <- cov(Ximp) + ridge*diag(p)
+
+    dmu <- norm(mu - mu0, "2") / max(norm(mu0, "2"), 1e-12)
+    dS  <- norm(S - S0,  "F") / max(norm(S0, "F"), 1e-12)
+    crit <- max(dmu, dS)
+    if (!is.na(crit) && crit < tol) break
+  }
+
+  list(X_imp = Ximp, mu = mu, Sigma = S, n_iter = it)
+}
+```
+:::
+
+
+
+## Fonction qui traite les outliers et les données manquantes
+
+On réunit toutes les fonctions précédentes en une seule afin de pouvoir faire toutes nos tâches par palier.
+
+
+
+::: {.cell}
+
+```{.r .cell-code}
+aggreg_list=list(aggregtout_P1,aggregtout_P2,aggregtout_P3,aggregtout_P4,aggregtout_P5)
+
+traitement=function(i){
+  x=aggreg_list[[i]]
+  parametres=param(x)
+  d=list(dens(x$Twater,parametres[[1]]),dens(x$O2sat,parametres[[2]]),dens(x$Chltot,parametres[[3]]))
+  cleaned_data=list(clean(x=x$Twater,d=d[[1]]),clean(x=x$O2sat,d=d[[2]]),clean(x=x$Chltot,d=d[[3]]))
+  #cleaned_data=EM_for_na(as.data.frame(cleaned_data))
+  #cleaned_data=data.frame(DATE=x$DATE,cleaned_data)
+  return(cleaned_data)
+}
+```
+:::
+
+::: {.cell}
+
+```{.r .cell-code}
+test=traitement(1)
+```
+:::
+
+::: {.cell}
+
+```{.r .cell-code}
+plot(aggregtout_P1$DATE,test[[1]])
+```
+
+::: {.cell-output-display}
+![](tp4_MARIAC_DUIGOU_files/figure-html/unnamed-chunk-25-1.png){width=672}
+:::
+:::
+
+
+
+
+ -->
 </section>
 </section>
 

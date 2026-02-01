@@ -172,6 +172,8 @@ lines(df75$DATE, df75$Twater, type="l",col="red")
 ```
 
 
+
+
 ## Deuxième approche : Agrégation en fonction du palier de profondeur
 
 Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.
@@ -185,7 +187,6 @@ P2 <- df[df$palier == 2,]
 P3 <- df[df$palier == 3,]
 P4 <- df[df$palier == 4,]
 P5 <- df[df$palier == 5,]
-
 ```
 
 
@@ -230,9 +231,10 @@ blocs4 <- frag(P4, gap = 100000)
 blocs5 <- frag(P5, gap = 100000)
 
 
-plot(blocs1[[1]]$DATE, blocs1[[1]]$Twater, type="l", main="Bloc 1 palier 1")
-plot(blocs1[[2]]$DATE, blocs1[[2]]$Twater, type="l",main="Bloc 2 palier 1")
 
+
+plot(blocs1[[1]]$DATE, blocs1[[1]]$Twater, type="l")
+plot(blocs1[[2]]$DATE, blocs1[[2]]$Twater, type="l")
 ```
 
 
@@ -269,8 +271,6 @@ aggregv2 <- function(X, temps = 75*60){
 
   out
 }
-
-aggregv2_bloc1 <- aggregv2(blocs1[[1]], temps = 75*60)
 ```
 
 
@@ -313,7 +313,6 @@ lines(aggregtout_P4$DATE, aggregtout_P4$Twater, col="red", type="l")
 
 plot(P5$DATE, P5$Twater, type="l")
 lines(aggregtout_P5$DATE, aggregtout_P5$Twater, col="red", type="l")
-
 ```
 
 On voit que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).
@@ -340,6 +339,251 @@ abline(h=c(0.01, 0.05, 0.1), lty=2)
 Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l'analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).
 
 
+
+## Traitement des données maquantes
+
+Il reste maintenant à traiter les données manquantes (NA) dans nos jeux de données nettoyés. Nous allons utiliser un algorithme EM pour estimer les valeurs manquantes en supposant que les données suivent une distribution normale multivariée.
+
+Pour cela, nous allons implémenter l'algorithme EM que nous avons codé précédemment dans le TP3.
+
+```{r}
+EM <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
+  X <- as.matrix(X)
+  n <- nrow(X)
+  p <- ncol(X)
+  miss <- is.na(X)
+
+  #INITIALISATION
+  Ximp <- X
+  cm <- colMeans(X, na.rm=TRUE)
+  for (j in 1:p){
+    Ximp[miss[,j], j] <- cm[j]
+  }
+
+  mu <- colMeans(Ximp)
+  S <- cov(Ximp) + ridge*diag(p)
+
+  for (it in 1:max_iter) {
+    mu0 <- mu; S0 <- S
+
+
+
+    #ETAPE E
+    for (i in 1:n) {
+      mi <- miss[i, ]
+      if (!any(mi)) next
+      oi <- !mi
+
+      Soo <- S[oi, oi, drop=FALSE] + ridge*diag(sum(oi))
+      Sm_o <- S[mi, oi, drop=FALSE]
+
+      x_o <- Ximp[i, oi]
+      Ximp[i, mi] <- as.numeric(mu[mi] + Sm_o %*% solve(Soo) %*% (x_o - mu[oi]))
+    }
+
+
+    #ETAPE M
+    mu <- colMeans(Ximp)
+    S  <- cov(Ximp) + ridge*diag(p)
+
+    dmu <- norm(mu - mu0, "2") / (norm(mu0, "2") + 1e-12)
+    dS  <- norm(S - S0,  "F") / (norm(S0,  "F") + 1e-12)
+    if (max(dmu, dS) < tol) break
+  }
+
+  list(X_imp = Ximp, mu = mu, Sigma = S, n_iter = it)
+}
+```
+
+On implémente l'algorithme EM sur chaque palier de profondeur puis on ajoute la colonne DATE pour pouvoir visualiser les résultats (pour Twater ici).
+
+```{r}
+P1EM <- as.data.frame(EM(aggregtout_P1[,2:4])$X_imp)
+P1EM$DATE <- aggregtout_P1$DATE
+
+P2EM <-  as.data.frame(EM(aggregtout_P2[,2:4])$X_imp)
+P2EM$DATE <- aggregtout_P2$DATE
+
+P3EM <-  as.data.frame(EM(aggregtout_P3[,2:4])$X_imp)
+P3EM$DATE <- aggregtout_P3$DATE
+
+P4EM <-  as.data.frame(EM(aggregtout_P4[,2:4])$X_imp)
+P4EM$DATE <- aggregtout_P4$DATE
+
+P5EM <-  as.data.frame(EM(aggregtout_P5[,2:4])$X_imp)
+P5EM$DATE <- aggregtout_P5$DATE
+
+
+plot(aggregtout_P1$DATE, aggregtout_P1$Twater, type="p", pch=16, cex=0.4,main="Twater pour palier 1 avec données manquantes")
+plot(P1EM$DATE, P1EM$X_imp[,1], type="p", pch=16, cex=0.4,main = "Twater pour palier 1 après imputation EM")
+```
+
+## Traitement des outliers
+
+
+
+# Visualisation des données
+
+## Boîte à moustaches
+
+On concatène les données nettoyées pour chaque palier dans un seul dataframe pour faciliter la visualisation. On se penche sur l'idée de faire des boîtes à moustaches pour chaque palier et chaque variable.
+
+```{r}
+library(dplyr)
+
+P1EM$palier <- 1
+P2EM$palier <- 2
+P3EM$palier <- 3
+P4EM$palier <- 4
+P5EM$palier <- 5
+
+data <- bind_rows(P1EM, P2EM, P3EM, P4EM, P5EM) %>%
+  mutate(palier = factor(palier))
+```
+
+```{r}
+library(ggplot2)
+
+
+ggplot(data, aes(x = palier, y = Twater, fill = palier)) +
+  geom_boxplot() +
+  labs(x="Palier", y="Twater") +
+  theme_minimal()
+
+ggplot(data, aes(x = palier, y = Twater, fill = palier)) +
+  geom_boxplot() +
+  labs(x="Palier", y="O2sat") +
+  theme_minimal()
+
+ggplot(data, aes(x = palier, y = Twater, fill = palier)) +
+  geom_boxplot() +
+  labs(x="Palier", y="Chltot") +
+  theme_minimal()
+
+```
+
+
+Il n'y a pas de différences visibles entre les palier pour chaque variable. Bien que les variables on l'air de plus se concentrer autour de la moyenne pour de paliers plus grand.
+
+Ce dont on aurait du s'attendre d'après les premièrs graphiques. En effet, on capte à quelques exceptions près les mêmes tendances pour chaque palier.
+
+## Étude de la volatilité en fonction du palier
+
+En revanche, quelque chose d'intéressant à observer est la volatilité de chaque variable en fonction du palier. En effet, pour la palier 1, il semble que la courbe semble beacoup plus érratique par rapport au palier 5 où la courbe et plus lisse. Nous allons donc étudier la volatilité de chaque variable en fonction du palier.
+
+
+Notre idée et donc de calculer la variation absolue entre deux instants successifs pour chaque variable et chaque palier. C'est à dire :
+$$
+\Delta X_t = |X_t - X_{t-1}|
+$$
+
+Avec `X ` la variable considérée (`Twater, O2sat ou Chltot`) et `t` l'instant considéré.
+
+```{r}
+library(tidyr)
+
+vol <- data %>%
+  arrange(palier, DATE) %>%
+  group_by(palier) %>%
+  mutate(dTwater = abs(Twater - lag(Twater)),
+         dO2sat  = abs(O2sat  - lag(O2sat)),
+         dChltot = abs(Chltot - lag(Chltot))) %>%
+  ungroup() %>%
+  pivot_longer(cols = c(dTwater, dO2sat, dChltot),
+               names_to = "variable",
+               values_to = "abs_delta") %>%
+  filter(is.finite(abs_delta)) %>%
+  mutate(variable = recode(variable,
+                           dTwater="Twater",
+                           dO2sat="O2sat",
+                           dChltot="Chltot"))
+
+ggplot(vol, aes(x = palier, y = abs_delta, fill = palier)) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  facet_wrap(~variable, scales = "free_y") +
+  theme_minimal() +
+  guides(fill = "none") +
+  labs(x="Palier", y="|Δ| (variation entre 2 instants)")
+
+
+```
+
+
+La volatilité instantanée décroît globalement avec le palier pour `Twater` (série plus lisse aux paliers élevés). Pour `O2sat` et `Chltot`, la volatilité typique varie peu selon le palier, mais on observe dans tous les cas des épisodes ponctuels de variations extrêmes (surement du à des outliers ou a des phénomènes très particulier qu'on ne pourrait expliquer).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
 # Traitement des outliers et des données manquantes
 
 Nous allons désormais faire un traitement des outliers sur les données agrégées pour chaque palier. Nous attribueront des NA à ces données manquantes par seuil de densité. Par la suite, nous utiliserons un algorithme EM pour opérer un traitement des valeurs manquantes (comme nous avions fait dans le précédent tp)
@@ -426,172 +670,6 @@ clean=function(x,d,seuil=0.01){
 }
 ```
 
-## Traitement des données maquantes
-
-
-
-Il reste maintenant à traiter les données manquantes (NA) dans nos jeux de données nettoyés. Nous allons utiliser un algorithme EM pour estimer les valeurs manquantes en supposant que les données suivent une distribution normale multivariée.
-
-Pour cela, nous allons implémenter l'algorithme EM que nous avons codé précédemment dans le TP3.
-
-```{r}
-EM <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
-  X <- as.matrix(X)
-  n <- nrow(X)
-  p <- ncol(X)
-  miss <- is.na(X)
-
-  #INITIALISATION
-  Ximp <- X
-  cm <- colMeans(X, na.rm=TRUE)
-  for (j in 1:p){
-    Ximp[miss[,j], j] <- cm[j]
-  }
-
-  mu <- colMeans(Ximp)
-  S <- cov(Ximp) + ridge*diag(p)
-
-  for (it in 1:max_iter) {
-    mu0 <- mu; S0 <- S
-
-
-
-    #ETAPE E
-    for (i in 1:n) {
-      mi <- miss[i, ]
-      if (!any(mi)) next
-      oi <- !mi
-
-      Soo <- S[oi, oi, drop=FALSE] + ridge*diag(sum(oi))
-      Sm_o <- S[mi, oi, drop=FALSE]
-
-      x_o <- Ximp[i, oi]
-      Ximp[i, mi] <- as.numeric(mu[mi] + Sm_o %*% solve(Soo) %*% (x_o - mu[oi]))
-    }
-
-
-    #ETAPE M
-    mu <- colMeans(Ximp)
-    S  <- cov(Ximp) + ridge*diag(p)
-
-    dmu <- norm(mu - mu0, "2") / (norm(mu0, "2") + 1e-12)
-    dS  <- norm(S - S0,  "F") / (norm(S0,  "F") + 1e-12)
-    if (max(dmu, dS) < tol) break
-  }
-
-  list(X_imp = Ximp, mu = mu, Sigma = S, n_iter = it)
-}
-```
-
-On implémente l'algorithme EM sur chaque palier de profondeur puis on ajoute la colonne DATE pour pouvoir visualiser les résultats (pour Twater ici).
-
-```{r}
-P1EM <- EM(aggregtout_P1[,2:4])
-P1EM$DATE <- aggregtout_P1$DATE
-
-P2EM <- EM(aggregtout_P2[,2:4])
-P2EM$DATE <- aggregtout_P2$DATE
-
-P3EM <- EM(aggregtout_P3[,2:4])
-P3EM$DATE <- aggregtout_P3$DATE
-
-P4EM <- EM(aggregtout_P4[,2:4])
-P4EM$DATE <- aggregtout_P4$DATE
-
-P5EM <- EM(aggregtout_P5[,2:4])
-P5EM$DATE <- aggregtout_P5$DATE
-
-
-
-
-plot(aggregtout_P1$DATE, aggregtout_P1$Twater, type="p", pch=16, cex=0.4,main="Twater pour palier 1 avec données manquantes")
-plot(P1EM$DATE, P1EM$X_imp[,1], type="p", pch=16, cex=0.4,main = "Twater pour palier 1 après imputation EM")
-```
-
-## Traitement des outliers
-
-# Visualisation des données
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 Algorithme EM
 ```{r}
@@ -671,4 +749,4 @@ plot(aggregtout_P1$DATE,test[[1]])
 ```
 
 
-
+ -->
