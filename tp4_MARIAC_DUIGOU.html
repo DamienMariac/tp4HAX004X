@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.551">
+<meta name="generator" content="quarto-1.6.42">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -35,7 +35,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -65,17 +65,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="tp4_MARIAC_DUIGOU_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="tp4_MARIAC_DUIGOU_files/libs/quarto-html/anchor.min.js"></script>
 <link href="tp4_MARIAC_DUIGOU_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="tp4_MARIAC_DUIGOU_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="tp4_MARIAC_DUIGOU_files/libs/quarto-html/quarto-syntax-highlighting-de84f8d6bb715db06a919283c2d1e787.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="tp4_MARIAC_DUIGOU_files/libs/bootstrap/bootstrap-ccd2b7ae8bd2febf6a9ff15c1742a5e1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <style>html{ scroll-behavior: smooth; }</style>
 <link href="tp4_MARIAC_DUIGOU_files/libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
-
 <script src="tp4_MARIAC_DUIGOU_files/libs/pagedtable-1.1/js/pagedtable.js"></script>
 
-
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -120,7 +118,8 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#première-approche-agrégation-simple" id="toc-première-approche-agrégation-simple" class="nav-link" data-scroll-target="#première-approche-agrégation-simple"><span class="header-section-number">2.1</span> Première approche : agrégation simple</a></li>
   <li><a href="#deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" id="toc-deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" class="nav-link" data-scroll-target="#deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur"><span class="header-section-number">2.2</span> Deuxième approche : Agrégation en fonction du palier de profondeur</a></li>
-  <li><a href="#traitement-des-données-maquantes" id="toc-traitement-des-données-maquantes" class="nav-link" data-scroll-target="#traitement-des-données-maquantes"><span class="header-section-number">2.3</span> Traitement des données maquantes</a></li>
+  <li><a href="#traitement-des-outliers" id="toc-traitement-des-outliers" class="nav-link" data-scroll-target="#traitement-des-outliers"><span class="header-section-number">2.3</span> traitement des outliers</a></li>
+  <li><a href="#traitement-des-données-maquantes" id="toc-traitement-des-données-maquantes" class="nav-link" data-scroll-target="#traitement-des-données-maquantes"><span class="header-section-number">2.4</span> Traitement des données maquantes</a></li>
   </ul></li>
   <li><a href="#visualisation-des-données" id="toc-visualisation-des-données" class="nav-link" data-scroll-target="#visualisation-des-données"><span class="header-section-number">3</span> Visualisation des données</a>
   <ul class="collapse">
@@ -341,6 +340,7 @@ window.Quarto = {
 <section id="deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="deuxième-approche-agrégation-en-fonction-du-palier-de-profondeur"><span class="header-section-number">2.2</span> Deuxième approche : Agrégation en fonction du palier de profondeur</h2>
 <p>Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.</p>
+<p>De plus, on ne considèrera pas les sauts du aux décalages horaires (passage heure d’été / heure d’hiver) comme des trous dans les données. On les traitera les données “redondantes” comme des observations normales et on ommettra les observations sautées lord du passage à l’heure d’été.</p>
 <p>C’est cette approche qu’on gardera pour la suite de l’analyse.</p>
 <div class="cell">
 <details class="code-fold">
@@ -576,10 +576,13 @@ window.Quarto = {
 </div>
 </div>
 <p>Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l’analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).</p>
+</section>
+<section id="traitement-des-outliers" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="traitement-des-outliers"><span class="header-section-number">2.3</span> traitement des outliers</h2>
 <p>Comme les écarts entre les données initiales et les données aggrégées sembles raisonnablement faibles, on admet l’hypothèse qu’il n’y a pas d’outliers dans nos jeux de données.</p>
 </section>
-<section id="traitement-des-données-maquantes" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="traitement-des-données-maquantes"><span class="header-section-number">2.3</span> Traitement des données maquantes</h2>
+<section id="traitement-des-données-maquantes" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="traitement-des-données-maquantes"><span class="header-section-number">2.4</span> Traitement des données maquantes</h2>
 <p>Il reste maintenant à traiter les données manquantes (NA) dans nos jeux de données nettoyés. Nous allons utiliser un algorithme EM pour estimer les valeurs manquantes en supposant que les données suivent une distribution normale multivariée.</p>
 <p>Pour cela, nous allons implémenter l’algorithme EM que nous avons codé précédemment dans le TP3.</p>
 <div class="cell">
@@ -877,18 +880,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -920,7 +912,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp('/' + window.location.host + '/');
@@ -928,7 +940,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
@@ -1025,7 +1037,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       if (window.Quarto?.typesetMath) {
         window.Quarto.typesetMath(note);
       }
-      // TODO in 1.5, we should make sure this works without a callout special case
       if (note.classList.contains("callout")) {
         return note.outerHTML;
       } else {

@@ -182,6 +182,8 @@ Cette approche est simple à mettre en place mais elle présente des inconvénie
 
 Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.
 
+De plus, on ne considèrera pas les sauts du aux décalages horaires (passage heure d'été / heure d'hiver) comme des trous dans les données. On les traitera les données "redondantes" comme des observations normales et on ommettra les observations sautées lord du passage à l'heure d'été.
+
 C'est cette approche qu'on gardera pour la suite de l'analyse.
 
 ```{r}
@@ -365,6 +367,8 @@ abline(h=c(0.01, 0.05, 0.1), lty=2)
 
 Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l'analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).
 
+## traitement des outliers
+
 Comme les écarts entre les données initiales et les données aggrégées sembles raisonnablement faibles, on admet l'hypothèse qu'il n'y a pas d'outliers dans nos jeux de données.
 
 ## Traitement des données maquantes
@@ -441,7 +445,7 @@ P5EM <-  as.data.frame(EM(aggregtout_P5[,2:4])$X_imp)
 P5EM$DATE <- aggregtout_P5$DATE
 ```
 
-On trace ici la superposition des données de saturation en O2 et les données de Chlorophyle totale pour chaque palier. 
+On trace ici la superposition des données de saturation en O2 et les données de Chlorophyle totale pour chaque palier.
 ```{r}
 plot(aggregtout_P1$DATE, aggregtout_P1$O2sat, type="p", pch=16, cex=0.2)
 points(P1EM$DATE, P1EM$O2sat , type="p", pch=16, cex=0.2)
@@ -464,8 +468,8 @@ points(P5EM$DATE, P5EM$O2sat , type="p", pch=16, cex=0.2)
 points(P5EM$DATE, P5EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
 ```
 
-On remarque que lorsque que la concentration en Chlorophyle subit une baisse ou une hausse, la saturation en O2 suit la même tendance à un petit décalage près. Cela peut s'expliquer par le fait que la chlorophyle est responsable de la croissance des végétaux ainsi que de leur processus de production en 02. C'est pourquoi une augmentation de la concentration en Chlorophyle s'accompagne d'une augmentation de saturation en O2. 
-Nous remarquons également que plus nous mesurons en profondeur, plus les données sont faibles (la différence entre le palier 1 et 5 est fine mais observable cela se remarque essentiellement lors de gros pics de données comme durant l'été 2021 ou on remarque une différence d'environ 50% pour la saturation en O2 entre ces deux paliers). En effet, la production d'O2 chez les végétaux se fait grâce à la Chlorophyle par mécanisme de photosynthèse. Or, plus nous sommes en profondeur, moins nous subissons d'ensoleillement. Ainsi la production d'Oxygène est moins importante en profondeur qu'en surface. 
+On remarque que lorsque que la concentration en Chlorophyle subit une baisse ou une hausse, la saturation en O2 suit la même tendance à un petit décalage près. Cela peut s'expliquer par le fait que la chlorophyle est responsable de la croissance des végétaux ainsi que de leur processus de production en 02. C'est pourquoi une augmentation de la concentration en Chlorophyle s'accompagne d'une augmentation de saturation en O2.
+Nous remarquons également que plus nous mesurons en profondeur, plus les données sont faibles (la différence entre le palier 1 et 5 est fine mais observable cela se remarque essentiellement lors de gros pics de données comme durant l'été 2021 ou on remarque une différence d'environ 50% pour la saturation en O2 entre ces deux paliers). En effet, la production d'O2 chez les végétaux se fait grâce à la Chlorophyle par mécanisme de photosynthèse. Or, plus nous sommes en profondeur, moins nous subissons d'ensoleillement. Ainsi la production d'Oxygène est moins importante en profondeur qu'en surface.
 
 # Visualisation des données
 
