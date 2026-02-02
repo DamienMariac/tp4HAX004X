@@ -347,11 +347,25 @@ plot(aggregtout_P1$DATE, abs(d), type="p", cex=0.4,
      xlab="Date", ylab="|Brut - Moyenne(75min)|")
 abline(h=c(0.01, 0.05, 0.1), lty=2)
 
+
+d <- P1$O2sat[idx] - aggregtout_P1$O2sat
+
+plot(aggregtout_P1$DATE, abs(d), type="p", cex=0.4,
+     xlab="Date", ylab="|Brut - Moyenne(75min)|")
+abline(h=c(0.01, 0.05, 0.1), lty=2)
+
+
+d <- P1$Chltot[idx] - aggregtout_P1$Chltot
+
+plot(aggregtout_P1$DATE, abs(d), type="p", cex=0.4,
+     xlab="Date", ylab="|Brut - Moyenne(75min)|")
+abline(h=c(0.01, 0.05, 0.1), lty=2)
+
 ```
 
 Les données agrégées semblent être une bonne approximation des données originales. On peut donc utiliser ces données agrégées pour la suite de l'analyse. On divise par 3 le nombre de points de données (de 18000 à 6000 pour un palier).
 
-
+Comme les écarts entre les données initiales et les données aggrégées sembles raisonnablement faibles, on admet l'hypothèse qu'il n'y a pas d'outliers dans nos jeux de données.
 
 ## Traitement des données maquantes
 
@@ -408,7 +422,7 @@ EM <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
 }
 ```
 
-On implémente l'algorithme EM sur chaque palier de profondeur puis on ajoute la colonne DATE pour pouvoir visualiser les résultats (pour Twater ici).
+On implémente l'algorithme EM sur chaque palier de profondeur puis on ajoute la colonne DATE pour pouvoir visualiser les résultats.
 
 ```{r}
 P1EM <- as.data.frame(EM(aggregtout_P1[,2:4])$X_imp)
@@ -427,6 +441,7 @@ P5EM <-  as.data.frame(EM(aggregtout_P5[,2:4])$X_imp)
 P5EM$DATE <- aggregtout_P5$DATE
 ```
 
+On trace ici la superposition des données de saturation en O2 et les données de Chlorophyle totale pour chaque palier. 
 ```{r}
 plot(aggregtout_P1$DATE, aggregtout_P1$O2sat, type="p", pch=16, cex=0.2)
 points(P1EM$DATE, P1EM$O2sat , type="p", pch=16, cex=0.2)
@@ -449,9 +464,8 @@ points(P5EM$DATE, P5EM$O2sat , type="p", pch=16, cex=0.2)
 points(P5EM$DATE, P5EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
 ```
 
-## Traitement des outliers
-
-####################################################################### A COMPLeter
+On remarque que lorsque que la concentration en Chlorophyle subit une baisse ou une hausse, la saturation en O2 suit la même tendance à un petit décalage près. Cela peut s'expliquer par le fait que la chlorophyle est responsable de la croissance des végétaux ainsi que de leur processus de production en 02. C'est pourquoi une augmentation de la concentration en Chlorophyle s'accompagne d'une augmentation de saturation en O2. 
+Nous remarquons également que plus nous mesurons en profondeur, plus les données sont faibles (la différence entre le palier 1 et 5 est fine mais observable cela se remarque essentiellement lors de gros pics de données comme durant l'été 2021 ou on remarque une différence d'environ 50% pour la saturation en O2 entre ces deux paliers). En effet, la production d'O2 chez les végétaux se fait grâce à la Chlorophyle par mécanisme de photosynthèse. Or, plus nous sommes en profondeur, moins nous subissons d'ensoleillement. Ainsi la production d'Oxygène est moins importante en profondeur qu'en surface. 
 
 # Visualisation des données
 
@@ -545,243 +559,3 @@ La volatilité instantanée décroît globalement avec le palier pour `Twater` (
 On peut supposer que cela est du au fait que la température de l'eau est plus stable en profondeur qu'à la surface où elle est plus sujette aux variations climatiques (ensoleillement, vent, etc.).
 
 Pour `O2sat` et `Chltot`, la volatilité typique varie peu selon le palier, mais on observe dans tous les cas des épisodes ponctuels de variations extrêmes (surement du à des outliers ou a des phénomènes très particulier qu'on ne pourrait expliquer).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--
-# Traitement des outliers et des données manquantes
-
-Nous allons désormais faire un traitement des outliers sur les données agrégées pour chaque palier. Nous attribueront des NA à ces données manquantes par seuil de densité. Par la suite, nous utiliserons un algorithme EM pour opérer un traitement des valeurs manquantes (comme nous avions fait dans le précédent tp)
-
-## Traitement des outliers
-
-Algorithme EM pour estimer un mélange gaussien
-```{r}
-EM=function(data, K=3, max_iter=100, tol=1e-6){
-  ts=data[!is.na(data)]
-  n=length(ts)
-
-  mu_k=as.numeric(quantile(ts,probs=seq(0.25, 0.75, length.out=K)))
-  sigma_k=rep(sd(ts), K)
-  eps_k=rep(1/K, K)
-
-  loglik_old=-Inf
-
-  for (iter in 1:max_iter){
-
-    # Etape E
-    dens=sapply(1:K, function(k)
-      eps_k[k]*dnorm(ts, mu_k[k], sigma_k[k])
-    )
-
-    dens_sum=rowSums(dens)
-    dens_sum[dens_sum<tol]=tol
-
-    gamma=dens/dens_sum
-
-    # Etape M
-    N_k=colSums(gamma)
-
-    eps_k=N_k/n
-    mu_k=colSums(gamma*matrix(ts,n,K))/N_k
-    sigma_k=sqrt(colSums(gamma*sweep(matrix(ts,n,K), 2, mu_k, FUN="-")^2)/N_k)
-
-    sigma_k[sigma_k<tol]=tol
-
-    loglik=sum(log(dens_sum))
-
-    if (abs(loglik - loglik_old)<tol) break
-    loglik_old=loglik
-  }
-
-  list(eps=eps_k, mu=mu_k, sigma=sigma_k, loglik=loglik)
-}
-```
-
-Estimation des paramètres pour chaque variable
-```{r}
-param=function(x){
-  list(EM(x$Twater),EM(x$O2sat),EM(x$Chltot))
-}
-```
-
-Estimation de la densité pour chaque variable
-```{r}
-dens=function(x,param){
-  d=c()
-  l=length(x)
-  for (i in 1:l){
-    s=c()
-    for (j in 1:3){
-      s=c(s,param$eps[j]*dnorm(x[i],param$mu[j],param$sigma[j]))
-    }
-    d=c(d,sum(s))
-  }
-  return(d)
-}
-```
-
-Attribution des NA pour des densité faibles
-```{r}
-clean=function(x,d,seuil=0.01){
-  l=length(x)
-  clean=rep(NA,l)
-  for (i in 1:l){
-    if (!is.na(d[i]) && d[i] >= seuil){
-      clean[i]=x[i]
-    }
-  }
-  return(clean)
-}
-```
-
-
-Algorithme EM
-```{r}
-EM_for_na <- function(X, max_iter=50, tol=1e-4, ridge=1e-6) {
-  X <- as.matrix(X)
-  n <- nrow(X)
-  p <- ncol(X)
-  miss <- is.na(X)
-
-  #INITIALISATION
-  Ximp <- X
-  cm <- colMeans(X, na.rm=TRUE)
-  for (j in 1:p){
-    Ximp[miss[,j], j] <- cm[j]
-  }
-
-  mu <- colMeans(Ximp)
-  S <- cov(Ximp) + ridge*diag(p)
-
-  for (it in 1:max_iter) {
-    mu0 <- mu; S0 <- S
-
-
-
-    #ETAPE E
-    for (i in 1:n) {
-      mi <- miss[i, ]
-      if (!any(mi) || all(mi)) next
-      oi <- !mi
-
-      Soo <- S[oi, oi, drop=FALSE] + ridge*diag(sum(oi))
-      Sm_o <- S[mi, oi, drop=FALSE]
-
-      x_o <- Ximp[i, oi]
-      Ximp[i, mi] <- as.numeric(mu[mi] + Sm_o %*% solve(Soo) %*% (x_o - mu[oi]))
-    }
-
-
-    #ETAPE M
-    mu <- colMeans(Ximp)
-    S  <- cov(Ximp) + ridge*diag(p)
-
-    dmu <- norm(mu - mu0, "2") / max(norm(mu0, "2"), 1e-12)
-    dS  <- norm(S - S0,  "F") / max(norm(S0, "F"), 1e-12)
-    crit <- max(dmu, dS)
-    if (!is.na(crit) && crit < tol) break
-  }
-
-  list(X_imp = Ximp, mu = mu, Sigma = S, n_iter = it)
-}
-```
-
-## Fonction qui traite les outliers et les données manquantes
-
-On réunit toutes les fonctions précédentes en une seule afin de pouvoir faire toutes nos tâches par palier.
-
-```{r}
-aggreg_list=list(aggregtout_P1,aggregtout_P2,aggregtout_P3,aggregtout_P4,aggregtout_P5)
-
-traitement=function(i){
-  x=aggreg_list[[i]]
-  parametres=param(x)
-  d=list(dens(x$Twater,parametres[[1]]),dens(x$O2sat,parametres[[2]]),dens(x$Chltot,parametres[[3]]))
-  cleaned_data=list(clean(x=x$Twater,d=d[[1]]),clean(x=x$O2sat,d=d[[2]]),clean(x=x$Chltot,d=d[[3]]))
-  #cleaned_data=EM_for_na(as.data.frame(cleaned_data))
-  #cleaned_data=data.frame(DATE=x$DATE,cleaned_data)
-  return(cleaned_data)
-}
-```
-
-```{r}
-test=traitement(1)
-```
-
-```{r}
-plot(aggregtout_P1$DATE,test[[1]])
-```
-
-
- -->
