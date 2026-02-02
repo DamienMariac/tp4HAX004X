@@ -42,6 +42,10 @@ Votre tache sera de
 
 ## Première approche : agrégation simple
 
+Notre première approche naïve a été de simplement aggréger les données à une fréquence de 1h15 en utilisant la moyenne des observations dans chaque intervalle de temps.
+
+
+
 Les données ne sont pas bien espacées dans le temps. Il y'a des données toutes les 20/30 secondes en moyenne mais aussi des trous de plusieurs heures.
 
 ```{r}
@@ -171,12 +175,14 @@ plot(df$DATE, df$Twater, type="l")
 lines(df75$DATE, df75$Twater, type="l",col="red")
 ```
 
-
+Cette approche est simple à mettre en place mais elle présente des inconvénients. En effet, on moyenne les données sur des paliers de profondeur peuvent être différents. Or, certaines variables peuvent varier en fonction de la profondeur (notamment la température de l'eau). On va donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur.
 
 
 ## Deuxième approche : Agrégation en fonction du palier de profondeur
 
 Il est possible que certaines variables varie en fonction de la profondeur. Nous allons donc essayer une autre approche qui consiste à aggréger les données en fonction du palier de profondeur. Cela permettra de mieux capturer les variations de chaque variable en fonction de la profondeur plutot que de moyenner entre paliers différents.
+
+C'est cette approche qu'on gardera pour la suite de l'analyse.
 
 ```{r}
 df <- read.csv("data_lake_2.csv")
@@ -233,8 +239,8 @@ blocs5 <- frag(P5, gap = 100000)
 
 
 
-plot(blocs1[[1]]$DATE, blocs1[[1]]$Twater, type="l")
-plot(blocs1[[2]]$DATE, blocs1[[2]]$Twater, type="l")
+plot(blocs1[[1]]$DATE, blocs1[[1]]$Twater, type="l",main = " Exemple d'un Bloc ( bloc 1 de palier 1")
+plot(blocs1[[2]]$DATE, blocs1[[2]]$Twater, type="l",main = " Exemple d'un Bloc ( bloc 2 de palier 1")
 ```
 
 
@@ -298,21 +304,28 @@ aggregtout_P5 <- aggregtout(blocs5, temps = 75*60)
 
 Voici une visualisation des données agrégées pour chaque palier, en comparant les données originales et les données agrégées.
 
-```{r}
-plot(P1$DATE, P1$Twater, type="l")
-lines(aggregtout_P1$DATE, aggregtout_P1$Twater, col="red", type="l")
+```{r,fig.width=20, fig.height=16}
+op <- par(mfrow=c(5,1), mar=c(3,4,2,1), oma=c(2,5,2,1))
 
-plot(P2$DATE, P2$Twater, type="l")
-lines(aggregtout_P2$DATE, aggregtout_P2$Twater, col="red", type="l")
+plot(P1$DATE, P1$Twater, cex=0.2, xlab="", ylab="Twater au palier 1", main="P1",col="blue")
+points(aggregtout_P1$DATE, aggregtout_P1$Twater, col="red", cex=0.2)
 
-plot(P3$DATE, P3$Twater, type="l")
-lines(aggregtout_P3$DATE, aggregtout_P3$Twater, col="red", type="l")
+plot(P2$DATE, P2$Twater, cex=0.2, xlab="", ylab="Twater au palier 2", main="P2",col="blue")
+points(aggregtout_P2$DATE, aggregtout_P2$Twater, col="red", cex=0.2)
 
-plot(P4$DATE, P4$Twater, type="l")
-lines(aggregtout_P4$DATE, aggregtout_P4$Twater, col="red", type="l")
+plot(P3$DATE, P3$Twater, cex=0.2, xlab="", ylab="Twater au palier 3", main="P3",col="blue")
+points(aggregtout_P3$DATE, aggregtout_P3$Twater, col="red", cex=0.2)
 
-plot(P5$DATE, P5$Twater, type="l")
-lines(aggregtout_P5$DATE, aggregtout_P5$Twater, col="red", type="l")
+plot(P4$DATE, P4$Twater, cex=0.2, xlab="", ylab="Twater au palier 4", main="P4",col="blue")
+points(aggregtout_P4$DATE, aggregtout_P4$Twater, col="red", cex=0.2)
+
+plot(P5$DATE, P5$Twater, cex=0.2, xlab="Date", ylab="Twater au palier 5", main="P5",col="blue")
+points(aggregtout_P5$DATE, aggregtout_P5$Twater, col="red", cex=0.2)
+
+mtext("DATE", side=1, outer=TRUE, line=0.5)
+mtext("Température eau (Twater)", side=2, outer=TRUE, line=2.5)
+
+par(op)
 ```
 
 On voit que les données agrégées semblent superposer les données originales à quelques exceptions près (notamment pour le palier 5 entre 2021 et 2022).
@@ -412,15 +425,33 @@ P4EM$DATE <- aggregtout_P4$DATE
 
 P5EM <-  as.data.frame(EM(aggregtout_P5[,2:4])$X_imp)
 P5EM$DATE <- aggregtout_P5$DATE
+```
 
+```{r}
+plot(aggregtout_P1$DATE, aggregtout_P1$O2sat, type="p", pch=16, cex=0.2)
+points(P1EM$DATE, P1EM$O2sat , type="p", pch=16, cex=0.2)
+points(P1EM$DATE, P1EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
 
-plot(aggregtout_P1$DATE, aggregtout_P1$Twater, type="p", pch=16, cex=0.4,main="Twater pour palier 1 avec données manquantes")
-plot(P1EM$DATE, P1EM$X_imp[,1], type="p", pch=16, cex=0.4,main = "Twater pour palier 1 après imputation EM")
+plot(aggregtout_P2$DATE, aggregtout_P2$O2sat, type="p", pch=16, cex=0.2)
+points(P2EM$DATE, P2EM$O2sat , type="p", pch=16, cex=0.2)
+points(P2EM$DATE, P2EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
+
+plot(aggregtout_P3$DATE, aggregtout_P3$O2sat, type="p", pch=16, cex=0.2)
+points(P3EM$DATE, P3EM$O2sat , type="p", pch=16, cex=0.2)
+points(P3EM$DATE, P3EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
+
+plot(aggregtout_P4$DATE, aggregtout_P4$O2sat, type="p", pch=16, cex=0.2)
+points(P4EM$DATE, P4EM$O2sat , type="p", pch=16, cex=0.2)
+points(P4EM$DATE, P4EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
+
+plot(aggregtout_P5$DATE, aggregtout_P5$O2sat, type="p", pch=16, cex=0.2)
+points(P5EM$DATE, P5EM$O2sat , type="p", pch=16, cex=0.2)
+points(P5EM$DATE, P5EM$Chltot , type="p", pch=16, cex=0.2,col="blue")
 ```
 
 ## Traitement des outliers
 
-
+####################################################################### A COMPLeter
 
 # Visualisation des données
 
@@ -509,7 +540,11 @@ ggplot(vol, aes(x = palier, y = abs_delta, fill = palier)) +
 ```
 
 
-La volatilité instantanée décroît globalement avec le palier pour `Twater` (série plus lisse aux paliers élevés). Pour `O2sat` et `Chltot`, la volatilité typique varie peu selon le palier, mais on observe dans tous les cas des épisodes ponctuels de variations extrêmes (surement du à des outliers ou a des phénomènes très particulier qu'on ne pourrait expliquer).
+La volatilité instantanée décroît globalement avec le palier pour `Twater` (série plus lisse aux paliers élevés).
+
+On peut supposer que cela est du au fait que la température de l'eau est plus stable en profondeur qu'à la surface où elle est plus sujette aux variations climatiques (ensoleillement, vent, etc.).
+
+Pour `O2sat` et `Chltot`, la volatilité typique varie peu selon le palier, mais on observe dans tous les cas des épisodes ponctuels de variations extrêmes (surement du à des outliers ou a des phénomènes très particulier qu'on ne pourrait expliquer).
 
 
 
